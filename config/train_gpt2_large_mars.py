@@ -25,7 +25,7 @@ log_interval = 10
 # optimizer
 optimizer_name = 'mars'
 learning_rate = 2e-3 # max learning rate
-weight_decay = 0.
+weight_decay = 1e-2
 beta1 = 0.95
 beta2 = 0.99
 lr_1d=1e-3

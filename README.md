@@ -79,6 +79,7 @@ $$
 In practice, we use the [Newton-Schulz iteration](https://github.com/KellerJordan/modded-nanogpt) to accelerate and approximate the solution of SVD problem.
 
 #### Performance of MARS Compared to Baselines
+Experimental results for **MARS** are conducted using **MARS-AdamW**, unless otherwise specified. 
 
 **MARS** consistently outperforms AdamW and the [Muon]([https://github.com/KellerJordan/modded-nanogpt](https://github.com/KellerJordan/modded-nanogpt/tree/e01b457c7c52e1cd0c592920499a016f5289a69e)) optimizer across GPT-2 models:
 
@@ -88,7 +89,7 @@ In practice, we use the [Newton-Schulz iteration](https://github.com/KellerJorda
 
 #### Efficiency of MARS
 
-The MARS algorithm can achieve better performance not only within the same number of training steps, but also within the same training time:
+The **MARS** algorithm can achieve better performance not only within the same number of training steps, but also within the same training time:
 
 | **GPT-2 small**                             | **GPT-2 medium**                             | **GPT-2 large**                             |
 | ------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------- |
@@ -244,6 +245,7 @@ Please adjust ``nproc_per_node``, ``batch_size``, and ``gradient_accumulation_st
 | GPT-2 small |    125M    |     6e-4     |    2e-2    |    6e-3    |    3e-3   |   1e-1    |     0.0     |    1e-2    | 
 | GPT-2 medium |    355M    |     3e-4     |    1e-2    |    3e-3    |    1.5e-3    |  1e-1    |     0.0     |    1e-2    | 
 | GPT-2 large |    770M    |     2e-4     |   6.67e-3   |    2e-3    |     1e-3    | 1e-1    |     0.0     |    1e-2    | 
+
 
 Note that different hyperparameters may benefit different stages of training. For the GPT-2 Small model, our **MARS** optimizer is tuned to prioritize the best final validation performance. If faster progress in the earlier stages of training is desired, using `wd=1e-3` may provide better results.
 
