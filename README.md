@@ -88,6 +88,13 @@ Experimental results for **MARS** are based on the **MARS-AdamW** instantiation,
 | ------------------------------------------------ | ------------------------------------------------- | ------------------------------------------------ |
 | <img src="assets/val_small.png" width="350"> | <img src="assets/val_medium.png" width="350"> | <img src="assets/val_large.png" width="350"> |
 
+|                 | GPT-2 Small (5B tokens) | GPT-2 Medium (5B tokens) | GPT-2 Large (5B tokens) | GPT-2 Small (20B tokens) | GPT-2 Medium (20B tokens) | GPT-2 Large (20B tokens) | GPT-2 Small (50B tokens) | GPT-2 Medium (50B tokens) | GPT-2 Large (50B tokens) |
+|-----------------|----------------|-----------------|----------------|-----------------|------------------|-----------------|-----------------|------------------|-----------------|
+| AdamW           | 3.193          | 3.084           | 3.013          | 3.024           | 2.821            | 2.741           | 2.885           | 2.691            | 2.561           |
+| Muon            | 3.165          | 3.082           | 2.915          | 3.006           | 2.860            | 2.691           | 2.901           | 2.755            | 2.573           |
+| **MARS**-exact  | **3.107**      | TBD             | TBD            | 2.980           | TBD              | TBD             | **2.847**       | TBD              | TBD             |
+| **MARS**-approx | 3.108          | **2.969**       | **2.876**      | **2.981**       | **2.763**        | **2.647**       | **2.849**       | **2.636**        | **2.518**       |
+
 #### Efficiency of MARS
 
 The **MARS** algorithm can achieve better performance not only within the same number of training steps, but also within the same training time:
