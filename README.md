@@ -78,8 +78,9 @@ $$
 
 In practice, we use the [Newton-Schulz iteration](https://github.com/KellerJordan/modded-nanogpt) to accelerate and approximate the solution of SVD problem.
 
-#### Performance of MARS Compared to Baselines
-Experimental results for **MARS** are conducted using **MARS-AdamW**, unless otherwise specified. 
+#### **Performance of MARS Compared to Baselines**
+
+Experimental results for **MARS** are based on the **MARS-AdamW** instantiation, unless otherwise stated. In our experiments, gradients are calculated once per sample and per update (**MARS**-approx in our [paper](https://arxiv.org/abs/2411.10438)). Performing exact gradient computation with two evaluations per update, as in the exact form of **MARS**, can slightly enhance performance but at the cost of doubling the computational expense. For more details, refer to our [paper](https://arxiv.org/abs/2411.10438).
 
 **MARS** consistently outperforms AdamW and the [Muon]([https://github.com/KellerJordan/modded-nanogpt](https://github.com/KellerJordan/modded-nanogpt/tree/e01b457c7c52e1cd0c592920499a016f5289a69e)) optimizer across GPT-2 models:
 
