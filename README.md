@@ -238,7 +238,7 @@ bash scripts/run_muon_{small/medium/large}.sh
 
 Please adjust ``nproc_per_node``, ``batch_size``, and ``gradient_accumulation_steps`` accordingly if you use other hardware setup. Make sure their product equals 480.
 
-##### Hyperparameters for GPT-2 models
+#### Hyperparameters for GPT-2 models
 
 |  Model Name  | Model Size | lr for AdamW | lr for Muon | lr for MARS | lr_1d for MARS | wd for AdamW | wd for Muon | wd for MARS | 
 | :----------: | :--------: | :----------: | :---------: | :---------: | :--------: | :----------: | :---------: | :---------: |
