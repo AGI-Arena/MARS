@@ -20,7 +20,7 @@ def update_fn(p, grad, exp_avg, exp_avg_sq, lr, wd, beta1, beta2, last_grad, eps
         c_t_norm = torch.norm(c_t)
         if c_t_norm > 1.:
             c_t = c_t / c_t_norm
-        exp_avg.mul_(beta1).add_(1. - beta1, c_t)
+        exp_avg.mul_(beta1).add_(c_t, alpha=1. - beta1)
         if (mars_type == "mars-adamw") or (mars_type == "mars-shampoo" and not is_grad_2d):
             exp_avg_sq.mul_(beta2).addcmul_(1. - beta2, c_t, c_t)
             bias_correction1 = 1.0 - beta1 ** step
@@ -39,7 +39,7 @@ def update_fn(p, grad, exp_avg, exp_avg_sq, lr, wd, beta1, beta2, last_grad, eps
         p.data.add_(real_update_tmp)
     else:
         beta1_1d, beta2_1d = betas_1d
-        exp_avg.mul_(beta1_1d).add_(1 - beta1_1d, grad)
+        exp_avg.mul_(beta1_1d).add_(grad, alpha=1. - beta1_1d)
         exp_avg_sq.mul_(beta2_1d).addcmul_(1 - beta2_1d, grad, grad)
         bias_correction1 = 1.0 - beta1_1d ** step
         bias_correction2 = 1.0 - beta2_1d ** step
