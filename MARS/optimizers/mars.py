@@ -125,12 +125,11 @@ class MARS(Optimizer):
             previous_X, previous_Y = None, None
             for epoch in range(epochs):
                 for X, Y in data_loader:
-                if previous_X:
-                    logits, loss = model(X, Y)
+                    if previous_X:
+                        logits, loss = model(X, Y)
                         loss.backward()
                         optimizer.update_previous_grad()
                         optimizer.zero_grad(set_to_none=True)
-                    # standard training code
                     logits, loss = model(X, Y)
                     loss.backward()
                     optimizer.step(bs=bs)
