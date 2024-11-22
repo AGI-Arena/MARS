@@ -136,7 +136,7 @@ class MARS(Optimizer):
                     optimizer.zero_grad(set_to_none=True)
                     optimizer.update_last_grad()
                     iter_num += 1
-                previous_X, previous_Y = X.clone(), Y.clone()
+                    previous_X, previous_Y = X.clone(), Y.clone()
         """
         if any(p is not None for p in [grads, output_params, scale, grad_norms]):
             raise RuntimeError('FusedAdam has been updated.  Simply initialize it identically to torch.optim.Adam, and call step() with no arguments.')
