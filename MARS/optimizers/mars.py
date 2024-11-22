@@ -120,6 +120,24 @@ class MARS(Optimizer):
         Arguments:
             closure (callable, optional): A closure that reevaluates the model
                 and returns the loss.
+                
+        If using exact version, the example usage is as follows:
+            previous_X, previous_Y = None, None
+            for epoch in range(epochs):
+                for X, Y in data_loader:
+                if previous_X:
+                    logits, loss = model(X, Y)
+                        loss.backward()
+                        optimizer.update_previous_grad()
+                        optimizer.zero_grad(set_to_none=True)
+                    # standard training code
+                    logits, loss = model(X, Y)
+                    loss.backward()
+                    optimizer.step(bs=bs)
+                    optimizer.zero_grad(set_to_none=True)
+                    optimizer.update_last_grad()
+                    iter_num += 1
+                previous_X, previous_Y = X.clone(), Y.clone()
         """
         if any(p is not None for p in [grads, output_params, scale, grad_norms]):
             raise RuntimeError('FusedAdam has been updated.  Simply initialize it identically to torch.optim.Adam, and call step() with no arguments.')
