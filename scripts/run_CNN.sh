@@ -1,0 +1,1 @@
+python MARS/train_CNN.py

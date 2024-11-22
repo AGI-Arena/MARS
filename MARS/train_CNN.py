@@ -9,7 +9,7 @@ from torch.optim.lr_scheduler import CosineAnnealingLR
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 import numpy as np
-from model_cv import Network
+from model_CNN import Network
 from optimizers.adopt import ADOPT
 from optimizers.mars import MARS
 import random

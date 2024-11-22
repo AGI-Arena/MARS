@@ -1,1 +1,0 @@
-python MARS/compare.py
