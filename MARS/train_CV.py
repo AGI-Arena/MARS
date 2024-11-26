@@ -2,19 +2,11 @@
 Adapted from uclaml/Padam: https://github.com/uclaml/Padam/blob/master/run_cnn_test_cifar10.py
 """
 import numpy as np
-import torch
-import torch.nn as nn
-import torch.optim as optim
-import torch.backends.cudnn as cudnn
-
 import os
 import argparse
 import json
-
-from utils.cv_utils import get_datasets, get_scheduler, get_model
 from tqdm import tqdm
 
-        
 parser = argparse.ArgumentParser(description='PyTorch Training')
 parser.add_argument(
     "--dataset", type=str, default="cifar10", choices=["mnist", "cifar10"], help="dataset to use"
@@ -41,11 +33,18 @@ parser.add_argument('--save_dir', type=str, default="./checkpoint", help='save d
 
 
 args = parser.parse_args()
+os.environ["CUDA_VISIBLE_DEVICES"] = args.cuda
 if args.wandb:
     import wandb
     wandb.init(project="CV", name=args.dataset+"_"+args.optim+"_"+str(args.lr), config=args)
+
+import torch
+import torch.nn as nn
+import torch.optim as optim
+import torch.backends.cudnn as cudnn
+from utils.cv_utils import get_datasets, get_scheduler, get_model
 use_cuda = torch.cuda.is_available() and not args.cpu
-os.environ["CUDA_VISIBLE_DEVICES"] = args.cuda
+
 os.environ['PYTHONHASHSEED'] = str(args.seed)
 np.random.seed(args.seed)
 torch.manual_seed(args.seed)
