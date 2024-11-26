@@ -5,23 +5,35 @@ Adapted from KellerJordan/modded-nanogpt: https://github.com/KellerJordan/modded
 import torch
 import torch.distributed as dist
 import os
+
 def zeropower_via_svd(G, steps=None):
     U, S, V = G.svd()
     return U @ V.T
 
 @torch.compile
-def zeropower_via_newtonschulz5(M, steps=5, eps=1e-7):
+def zeropower_via_newtonschulz5(G, steps=10, eps=1e-7):
+    """
+    Newton-Schulz iteration to compute the zeroth power / orthogonalization of G. We opt to use a
+    quintic iteration whose coefficients are selected to maximize the slope at zero. For the purpose
+    of minimizing steps, it turns out to be empirically effective to keep increasing the slope at
+    zero even beyond the point where the iteration no longer converges all the way to one everywhere
+    on the interval. This iteration therefore does not produce UV^T but rather something like US'V^T
+    where S' is diagonal with S_{ii}' \sim Uniform(0.5, 1.5), which turns out not to hurt model
+    performance at all relative to UV^T, where USV^T = G is the SVD.
+    """
+    assert len(G.shape) == 2
     a, b, c = (3.4445, -4.7750,  2.0315)
-    X = M.bfloat16() / (M.norm() + eps)
-    if M.size(0) > M.size(1):
-        X = X.T 
+    X = G.bfloat16()
+    X /= (X.norm() + eps) # ensure top singular value <= 1
+    if G.size(0) > G.size(1):
+        X = X.T
     for _ in range(steps):
-        A = X @ X.T 
-        B = A @ X 
-        X = a * X + b * B + c * A @ B 
-    if M.size(0) > M.size(1):
-        X = X.T 
-    return X.to(M.dtype)
+        A = X @ X.T
+        B = A @ X
+        X = a * X + b * B + c * A @ B
+    if G.size(0) > G.size(1):
+        X = X.T
+    return X
 
 zeropower_backends = dict(svd=zeropower_via_svd, newtonschulz5=zeropower_via_newtonschulz5)
 
@@ -51,9 +63,15 @@ class Muon(torch.optim.Optimizer):
         backend_steps: The number of iteration steps to use in the backend, if it is iterative.
     """
     def __init__(self, params, lr=0.02, momentum=0.95, nesterov=True,
-                 backend='newtonschulz5', backend_steps=5, rank=0, world_size=1, weight_decay=0.):
+                 backend='newtonschulz5', backend_steps=5, weight_decay=0.):
         defaults = dict(lr=lr, momentum=momentum, nesterov=nesterov, backend=backend, backend_steps=backend_steps, weight_decay=weight_decay)
         super().__init__(params, defaults)
+        if 'WORLD_SIZE' in os.environ:
+            self.world_size = int(os.environ['WORLD_SIZE'])
+            self.rank = int(os.environ['RANK'])
+        else:
+            self.world_size = 1
+            self.rank = 0
 
     def step(self):
 
@@ -70,7 +88,7 @@ class Muon(torch.optim.Optimizer):
             curr_idx = 0
             for i, p in enumerate(group['params']):
                 # luckily this will perfectly distribute a transformer with multiple of 4 layers to 8 GPUs
-                if i % int(os.environ['WORLD_SIZE']) == int(os.environ['RANK']):
+                if i % int(self.world_size) == int(self.rank):
                     g = p.grad
                     assert g is not None
                     state = self.state[p]
@@ -86,7 +104,8 @@ class Muon(torch.optim.Optimizer):
                 curr_idx += p.numel()
 
             # sync updates across devices. we are not memory-constrained so can do this simple deserialization
-            dist.all_reduce(updates_flat, op=dist.ReduceOp.SUM)
+            if self.world_size > 1:
+                dist.all_reduce(updates_flat, op=dist.ReduceOp.SUM)
 
             # deserialize and apply updates
             curr_idx = 0

@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Bytedance Ltd. and/or its affiliates
+# SPDX-License-Identifier: Apache-2.0
 import argparse
 from typing import List, Tuple, Type
 
@@ -9,7 +11,7 @@ from torch.optim.lr_scheduler import CosineAnnealingLR
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 import numpy as np
-from model_CNN import Network
+from utils.model_CNN import Network
 from optimizers.adopt import ADOPT
 from optimizers.mars import MARS
 import random

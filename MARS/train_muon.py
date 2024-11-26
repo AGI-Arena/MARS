@@ -214,7 +214,7 @@ from opt import CombinedOptimizer
 # optimizer2 = Muon([p for p in params if p.ndim == 2], lr=muon_learning_rate, rank=ddp_rank, world_size=ddp_world_size)
 # optimizers = [optimizer1, optimizer2]
 optimizer = CombinedOptimizer(params, [AdamW, Muon], [{'lr': learning_rate, 'betas': (beta1, beta2), 'weight_decay': weight_decay},
-                                                      {'lr': muon_learning_rate, 'rank': ddp_rank, 'world_size': ddp_world_size, 'weight_decay': muon_weight_decay}])
+                                                      {'lr': muon_learning_rate, 'weight_decay': muon_weight_decay}])
 if init_from == 'resume':
     # for optimizer in optimizers:
     optimizer.load_state_dict(checkpoint['optimizer'])

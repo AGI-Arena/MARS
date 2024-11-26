@@ -77,46 +77,6 @@ class Base(nn.Module):
     def summary(self):
         print(self)
         print(f"Number of parameters: {self.num_params}")
-    
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        raise NotImplementedError("Subclass must implement this method")
-
-
-class MLP(Base):
-    """Multi-layer Perceptron."""
-    def __init__(
-        self,
-        n_inputs: int,
-        n_hiddens_list: Union[List, int],
-        n_outputs: int,
-        activation_f: str = "Tanh",
-    ):
-        super().__init__()
-        
-        if isinstance(n_hiddens_list, int):
-            n_hiddens_list = [n_hiddens_list]
-        
-        if n_hiddens_list == [] or n_hiddens_list == [0]:
-            self.n_hidden_layers = 0
-        else:
-            self.n_hidden_layers = len(n_hiddens_list)
-        
-        activation = get_activation(activation_f)
-        
-        layers = []
-        ni = n_inputs
-        if self.n_hidden_layers > 0:
-            for _, n_units in enumerate(n_hiddens_list):
-                layers.append(nn.Linear(ni, n_units))
-                layers.append(activation())
-                ni = n_units
-        layers.append(nn.Linear(ni, n_outputs))
-        
-        self.layers = nn.Sequential(*layers)
-    
-    def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = x.view(x.size(0), -1)
-        return self.layers(x)
 
 
 class Network(Base):
@@ -234,23 +194,3 @@ class Network(Base):
         x = x.view(x.size(0), -1)
         x = self.fcn(x)
         return self.output(x)
-
-
-if __name__ == "__main__":
-    # Test MLP
-    x = torch.randn(4, 10)
-    model = MLP(n_inputs=x.shape[1], n_hiddens_list=[10, 10], n_outputs=2, activation_f="ReLU")
-    model.summary()
-    print("mlp output shape:", model(x).shape)
-    
-    # Test CNN
-    x = torch.randn(4, 3, 32, 32)  # Note: PyTorch uses channels_first format
-    model = Network(
-        n_inputs=x.shape[1:],
-        n_outputs=10,
-        conv_layers_list=[{"filters": 8, "kernel_size": 3}, {"filters": 16, "kernel_size": 3}],
-        n_hiddens_list=[32, 10],
-        activation_f="GELU",
-    )
-    model.summary()
-    print("cnn output shape:", model(x).shape)
