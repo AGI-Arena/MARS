@@ -9,7 +9,7 @@ from tqdm import tqdm
 
 parser = argparse.ArgumentParser(description='PyTorch Training')
 parser.add_argument(
-    "--dataset", type=str, default="cifar10", choices=["mnist", "cifar10"], help="dataset to use"
+    "--dataset", type=str, default="cifar10", choices=["mnist", "cifar10", "cifar100"], help="dataset to use"
 )
 parser.add_argument(
     "--scheduler", type=str, default="multistep", choices=["multistep", "cosine", "constant"], help="scheduler to use"
@@ -21,6 +21,7 @@ parser.add_argument("--cpu", action="store_true", help="use cpu only")
 parser.add_argument("--cuda", type=str, default="0", help="device to use")
 
 parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
+parser.add_argument('--adamw_lr', default=0.003, type=float, help='learning rate for adamw')
 parser.add_argument('--resume', '-r', action='store_true', help='resume from checkpoint')
 parser.add_argument('--optim', '-m', type=str, choices=["adam", "adamw", "mars", "muon"], default='mars', help='optimization method, default: mars')
 parser.add_argument('--net', '-n', type=str, default="resnet18", help='network archtecture, choosing from "simple_cnn" or torchvision models. default: resnet18')
@@ -30,13 +31,17 @@ parser.add_argument('--beta1', default=0.9, type=float, help='beta1')
 parser.add_argument('--beta2', default=0.999, type=float, help='beta2')
 parser.add_argument('--wandb', action='store_true', help='use wandb')
 parser.add_argument('--save_dir', type=str, default="./checkpoint", help='save directory')
+parser.add_argument('--wandb_name', type=str, default="None", help='log directory')
 
 
 args = parser.parse_args()
 os.environ["CUDA_VISIBLE_DEVICES"] = args.cuda
 if args.wandb:
     import wandb
-    wandb.init(project="CV", name=args.dataset+"_"+args.optim+"_"+str(args.lr), config=args)
+    if args.wandb_name == "None":
+        wandb.init(project="CV", name=args.dataset+"_"+args.net+"_"+args.optim+"_"+str(args.lr), config=args)
+    else:
+        wandb.init(project="CV", name=args.wandb_name, config=args)
 
 import torch
 import torch.nn as nn
@@ -56,7 +61,7 @@ if args.resume:
     # Load checkpoint.
     print('==> Resuming from checkpoint..')
     assert os.path.isdir('checkpoint'), 'Error: no checkpoint directory found!'
-    checkpoint = torch.load('./checkpoint/cnn_cifar10_'+args.optim)
+    checkpoint = torch.load(f'./checkpoint/{args.net}_{args.dataset}_'+args.optim)
     model = checkpoint['model']
     start_epoch = checkpoint['epoch']
     train_losses = checkpoint['train_losses']
@@ -86,10 +91,10 @@ if args.optim == 'adam':
 elif args.optim == 'adamw':
     optimizer = optim.AdamW(model.parameters(), lr=args.lr, weight_decay = args.wd, betas = betas)
 elif args.optim == 'muon':
-    optimizer = CombinedOptimizer(model.parameters(), [AdamW, Muon], [{'lr': 0.1, 'betas': betas, 'weight_decay': args.wd},
+    optimizer = CombinedOptimizer(model.parameters(), [AdamW, Muon], [{'lr': args.adamw_lr, 'betas': betas, 'weight_decay': args.wd},
                                                       {'lr': args.lr, 'weight_decay': 0.}])
 elif args.optim == 'mars':
-    optimizer = MARS(model.parameters(), lr=args.lr, weight_decay = args.wd)
+    optimizer = MARS(model.parameters(), lr=args.lr, weight_decay = args.wd, lr_1d=args.adamw_lr)
     
 scheduler = get_scheduler(optimizer, args)
 best_acc = 0  # best test accuracy
@@ -108,9 +113,9 @@ for epoch in range(start_epoch+1, args.Nepoch+1):
     model.train()  # Training
 
     train_loss = 0
-    correct = 0
-    total = 0
-    
+    correct_train = 0
+    total_train = 0
+    print(scheduler.get_lr())
     t_bar.reset()
     for batch_idx, (inputs, targets) in enumerate(trainloader):
         if use_cuda:
@@ -124,14 +129,14 @@ for epoch in range(start_epoch+1, args.Nepoch+1):
 
         train_loss += loss.item()
         _, predicted = torch.max(outputs.data, 1)
-        total += targets.size(0)
-        correct += predicted.eq(targets.data).cpu().sum().item()
+        total_train += targets.size(0)
+        correct_train += predicted.eq(targets.data).cpu().sum().item()
 
         t_bar.update(1)
-        t_bar.set_description('Epoch: %d | Loss: %.3f | Acc: %.3f%% ' % (epoch, train_loss/(batch_idx+1), 100.0/total*(correct)))
+        t_bar.set_description('Epoch: %d | Loss: %.3f | Acc: %.3f%% ' % (epoch, train_loss/(batch_idx+1), 100.0/total_train*(correct_train)))
         t_bar.refresh()
     train_losses.append(train_loss/(batch_idx+1))
-    train_errs.append(1 - correct/total)
+    train_errs.append(1 - correct_train/total_train)
 
     model.eval() # Testing
  
@@ -158,7 +163,7 @@ for epoch in range(start_epoch+1, args.Nepoch+1):
     if args.wandb:
         wandb.log({"epoch": epoch,
                "train_loss": train_loss/(batch_idx+1), 
-               "train_acc": 100.0/total*(correct), 
+               "train_acc": 100.0/total_train*(correct_train), 
                "test_loss": test_loss/(batch_idx+1), 
                "test_acc": 100.0/total*(correct),
                "lr": scheduler.get_lr()[0]}, step=epoch)

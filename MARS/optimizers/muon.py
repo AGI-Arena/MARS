@@ -91,6 +91,8 @@ class Muon(torch.optim.Optimizer):
                 if i % int(self.world_size) == int(self.rank):
                     g = p.grad
                     assert g is not None
+                    if g.ndim > 2:
+                        g = g.view(g.size(0), -1)
                     state = self.state[p]
                     if 'momentum_buffer' not in state:
                         state['momentum_buffer'] = torch.zeros_like(g)

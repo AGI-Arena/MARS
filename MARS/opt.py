@@ -43,7 +43,7 @@ def separate_params(param_groups):
         param_group  = param_groups
         # param_group is a list of param tensors
         for param in param_group:
-            if param.ndim == 2:
+            if param.ndim >= 2:
                 params_2d.append(param)
             else:
                 params_non2d.append(param)
