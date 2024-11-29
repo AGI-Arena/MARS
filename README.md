@@ -82,18 +82,25 @@ In practice, we use the [Newton-Schulz iteration](https://github.com/KellerJorda
 
 Experimental results for **MARS** are based on the **MARS-AdamW** instantiation, unless otherwise stated. In our experiments, gradients are calculated once per sample and per update (**MARS**-approx in our [paper](https://arxiv.org/abs/2411.10438)). Performing exact gradient computation with two evaluations per update, as in the exact form of **MARS**, can slightly enhance performance but at the cost of doubling the computational expense. For more details, refer to our [paper](https://arxiv.org/abs/2411.10438).
 
-**MARS** consistently outperforms AdamW and the [Muon]([https://github.com/KellerJordan/modded-nanogpt](https://github.com/KellerJordan/modded-nanogpt/tree/e01b457c7c52e1cd0c592920499a016f5289a69e)) optimizer across GPT-2 models:
+**MARS** consistently outperforms AdamW and the [Muon]([https://github.com/KellerJordan/modded-nanogpt](https://github.com/KellerJordan/modded-nanogpt/tree/e01b457c7c52e1cd0c592920499a016f5289a69e)) optimizers across GPT-2 models:
 
 | **GPT-2 small**                            | **GPT-2 medium**                            | **GPT-2 large**                            |
 | ------------------------------------------------ | ------------------------------------------------- | ------------------------------------------------ |
-| <img src="assets/val_small.png" width="350"> | <img src="assets/val_medium.png" width="350"> | <img src="assets/val_large.png" width="350"> |
+| `<img src="assets/val_small.png" width="350">` | `<img src="assets/val_medium.png" width="350">` | `<img src="assets/val_large.png" width="350">` |
 
-|   Best Val Loss      | GPT-2 Small (5B tokens) | GPT-2 Medium (5B tokens) | GPT-2 Large (5B tokens) | GPT-2 Small (20B tokens) | GPT-2 Medium (20B tokens) | GPT-2 Large (20B tokens) | GPT-2 Small (50B tokens) | GPT-2 Medium (50B tokens) | GPT-2 Large (50B tokens) |
-|-----------------|----------------|-----------------|----------------|-----------------|------------------|-----------------|-----------------|------------------|-----------------|
-| AdamW           | 3.193          | 3.084           | 3.013          | 3.024           | 2.821            | 2.741           | 2.885           | 2.691            | 2.561           |
-| Muon            | 3.165          | 3.009           | 2.915          | 3.006           | 2.813            | 2.691           | 2.901           | 2.688            | 2.573           |
-| **MARS**-exact  | **3.107**      | TBD             | TBD            | 2.980           | TBD              | TBD             | **2.847**       | TBD              | TBD             |
-| **MARS**-approx | 3.108          | **2.969**       | **2.876**      | **2.981**       | **2.763**        | **2.647**       | **2.849**       | **2.636**        | **2.518**       |
+| Best Val Loss         | GPT-2 Small (5B tokens) | GPT-2 Medium (5B tokens) | GPT-2 Large (5B tokens) | GPT-2 Small (20B tokens) | GPT-2 Medium (20B tokens) | GPT-2 Large (20B tokens) | GPT-2 Small (50B tokens) | GPT-2 Medium (50B tokens) | GPT-2 Large (50B tokens) |
+| --------------------- | ----------------------- | ------------------------ | ----------------------- | ------------------------ | ------------------------- | ------------------------ | ------------------------ | ------------------------- | ------------------------ |
+| AdamW                 | 3.193                   | 3.084                    | 3.013                   | 3.024                    | 2.821                     | 2.741                    | 2.885                    | 2.691                     | 2.561                    |
+| Muon                  | 3.165                   | 3.009                    | 2.915                   | 3.006                    | 2.813                     | 2.691                    | 2.901                    | 2.688                     | 2.573                    |
+| **MARS**-exact  | **3.107**         | TBD                      | TBD                     | 2.980                    | TBD                       | TBD                      | **2.847**          | TBD                       | TBD                      |
+| **MARS**-approx | 3.108                   | **2.969**          | **2.876**         | **2.981**          | **2.763**           | **2.647**          | **2.849**          | **2.636**           | **2.518**          |
+
+**MARS** can achieve better test loss and accuracy than AdamW and the [Muon]([https://github.com/KellerJordan/modded-nanogpt](https://github.com/KellerJordan/modded-nanogpt/tree/e01b457c7c52e1cd0c592920499a016f5289a69e)) optimizers on CIFAR-10 and CIFAR-100 datasets with ResNet-18:
+
+| Dataset                 | **CIFAR-10**                                       | **CIFAR-100**                                       |
+| ----------------------- | -------------------------------------------------------- | --------------------------------------------------------- |
+| **Test loss**     | `<img src="assets/cifar10_test_loss.png" width="350">` | `<img src="assets/cifar100_test_loss.png" width="350">` |
+| **Test Accuracy** | `<img src="assets/cifar10_test_acc.png" width="350">`  | `<img src="assets/cifar100_test_acc.png" width="350">`  |
 
 #### Efficiency of MARS
 
@@ -101,8 +108,7 @@ The **MARS** algorithm can achieve better performance not only within the same n
 
 | **GPT-2 small**                             | **GPT-2 medium**                             | **GPT-2 large**                             |
 | ------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------- |
-| <img src="assets/time_small.png" width="350"> | <img src="assets/time_medium.png" width="350"> | <img src="assets/time_large.png" width="350"> |
-
+| `<img src="assets/time_small.png" width="350">` | `<img src="assets/time_medium.png" width="350">` | `<img src="assets/time_large.png" width="350">` |
 
 ---
 
@@ -248,15 +254,13 @@ Please adjust ``nproc_per_node``, ``batch_size``, and ``gradient_accumulation_st
 
 #### Hyperparameters for GPT-2 models
 
-|  Model Name  | Model Size | lr for AdamW | lr for Muon | lr for MARS | lr_1d for MARS | wd for AdamW | wd for Muon | wd for MARS | 
-| :----------: | :--------: | :----------: | :---------: | :---------: | :--------: | :----------: | :---------: | :---------: |
-| GPT-2 small |    125M    |     6e-4     |    2e-2    |    6e-3    |    3e-3   |   1e-1    |     0.0     |    1e-2    | 
-| GPT-2 medium |    355M    |     3e-4     |    1e-2    |    3e-3    |    1.5e-3    |  1e-1    |     0.0     |    1e-2    | 
-| GPT-2 large |    770M    |     2e-4     |   6.67e-3   |    2e-3    |     1e-3    | 1e-1    |     0.0     |    1e-2    | 
-
+|  Model Name  | Model Size | lr for AdamW | lr for Muon | lr for MARS | lr_1d for MARS | wd for AdamW | wd for Muon | wd for MARS |
+| :----------: | :--------: | :----------: | :---------: | :---------: | :------------: | :----------: | :---------: | :---------: |
+| GPT-2 small |    125M    |     6e-4     |    2e-2    |    6e-3    |      3e-3      |     1e-1     |     0.0     |    1e-2    |
+| GPT-2 medium |    355M    |     3e-4     |    1e-2    |    3e-3    |     1.5e-3     |     1e-1     |     0.0     |    1e-2    |
+| GPT-2 large |    770M    |     2e-4     |   6.67e-3   |    2e-3    |      1e-3      |     1e-1     |     0.0     |    1e-2    |
 
 Note that different hyperparameters may benefit different stages of training. For the GPT-2 Small model, our **MARS** optimizer is tuned to prioritize the best final validation performance. If faster progress in the earlier stages of training is desired, using `wd=1e-3` may provide better results.
-
 
 ### Customized Training
 
@@ -295,7 +299,6 @@ for epoch in range(epochs):
 ## Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=AGI-Arena/MARS&type=Date)](https://star-history.com/#AGI-Arena/MARS&Date)
-
 
 ## Citation
 
