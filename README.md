@@ -86,7 +86,7 @@ Experimental results for **MARS** are based on the **MARS-AdamW** instantiation,
 
 | **GPT-2 small**                            | **GPT-2 medium**                            | **GPT-2 large**                            |
 | ------------------------------------------------ | ------------------------------------------------- | ------------------------------------------------ |
-| `<img src="assets/val_small.png" width="350">` | `<img src="assets/val_medium.png" width="350">` | `<img src="assets/val_large.png" width="350">` |
+| <img src="assets/val_small.png" width="350"> | <img src="assets/val_medium.png" width="350"> | <img src="assets/val_large.png" width="350"> |
 
 | Best Val Loss         | GPT-2 Small (5B tokens) | GPT-2 Medium (5B tokens) | GPT-2 Large (5B tokens) | GPT-2 Small (20B tokens) | GPT-2 Medium (20B tokens) | GPT-2 Large (20B tokens) | GPT-2 Small (50B tokens) | GPT-2 Medium (50B tokens) | GPT-2 Large (50B tokens) |
 | --------------------- | ----------------------- | ------------------------ | ----------------------- | ------------------------ | ------------------------- | ------------------------ | ------------------------ | ------------------------- | ------------------------ |
