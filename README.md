@@ -99,8 +99,8 @@ Experimental results for **MARS** are based on the **MARS-AdamW** instantiation,
 
 | Dataset                 | **CIFAR-10**                                       | **CIFAR-100**                                       |
 | ----------------------- | -------------------------------------------------------- | --------------------------------------------------------- |
-| **Test loss**     | `<img src="assets/cifar10_test_loss.png" width="350">` | `<img src="assets/cifar100_test_loss.png" width="350">` |
-| **Test Accuracy** | `<img src="assets/cifar10_test_acc.png" width="350">`  | `<img src="assets/cifar100_test_acc.png" width="350">`  |
+| **Test loss**     | <img src="assets/cifar10_test_loss.png" width="350"> | <img src="assets/cifar100_test_loss.png" width="350"> |
+| **Test Accuracy** | <img src="assets/cifar10_test_acc.png" width="350">  | <img src="assets/cifar100_test_acc.png" width="350">  |
 
 #### Efficiency of MARS
 
@@ -108,7 +108,7 @@ The **MARS** algorithm can achieve better performance not only within the same n
 
 | **GPT-2 small**                             | **GPT-2 medium**                             | **GPT-2 large**                             |
 | ------------------------------------------------- | -------------------------------------------------- | ------------------------------------------------- |
-| `<img src="assets/time_small.png" width="350">` | `<img src="assets/time_medium.png" width="350">` | `<img src="assets/time_large.png" width="350">` |
+| <img src="assets/time_small.png" width="350"> | <img src="assets/time_medium.png" width="350"> | <img src="assets/time_large.png" width="350"> |
 
 ---
 
