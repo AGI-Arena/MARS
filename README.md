@@ -95,7 +95,7 @@ Experimental results for **MARS** are based on the **MARS-AdamW** instantiation,
 | **MARS**-exact  | **3.107**         | TBD                      | TBD                     | 2.980                    | TBD                       | TBD                      | **2.847**          | TBD                       | TBD                      |
 | **MARS**-approx | 3.108                   | **2.969**          | **2.876**         | **2.981**          | **2.763**           | **2.647**          | **2.849**          | **2.636**           | **2.518**          |
 
-**MARS** can achieve better test loss and accuracy than AdamW and the [Muon]([https://github.com/KellerJordan/modded-nanogpt](https://github.com/KellerJordan/modded-nanogpt/tree/e01b457c7c52e1cd0c592920499a016f5289a69e)) optimizers on CIFAR-10 and CIFAR-100 datasets with ResNet-18 and MultiStepLR(optimizer, milestones=[100, 150], gamma=0.1) scheduler (We display the best results for each optimizer with grid search of base learning rate within [$10^{-5}$, ..., $10^{-1}$]):
+**MARS** can achieve better test loss and accuracy than AdamW and the [Muon]([https://github.com/KellerJordan/modded-nanogpt](https://github.com/KellerJordan/modded-nanogpt/tree/e01b457c7c52e1cd0c592920499a016f5289a69e)) optimizers on CIFAR-10 and CIFAR-100 datasets with ResNet-18 and MultiStepLR(optimizer, milestones=[100, 150], gamma=0.1) scheduler (We display the best results for each optimizer with grid search of base learning rate within [1e-5 ..., 1e-1]):
 
 | Dataset                 | **CIFAR-10**                                       | **CIFAR-100**                                       |
 | ----------------------- | -------------------------------------------------------- | --------------------------------------------------------- |
