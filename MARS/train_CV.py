@@ -25,7 +25,7 @@ parser.add_argument('--adamw_lr', default=0.003, type=float, help='learning rate
 parser.add_argument('--resume', '-r', action='store_true', help='resume from checkpoint')
 parser.add_argument('--optim', '-m', type=str, choices=["adam", "adamw", "mars", "muon"], default='mars', help='optimization method, default: mars')
 parser.add_argument('--net', '-n', type=str, default="resnet18", help='network archtecture, choosing from "simple_cnn" or torchvision models. default: resnet18')
-parser.add_argument('--wd', default=5e-4, type=float, help='weight decay')
+parser.add_argument('--wd', default=0., type=float, help='weight decay')
 parser.add_argument('--Nepoch', default=200, type=int, help='number of epoch')
 parser.add_argument('--beta1', default=0.9, type=float, help='beta1')
 parser.add_argument('--beta2', default=0.999, type=float, help='beta2')

@@ -95,12 +95,24 @@ Experimental results for **MARS** are based on the **MARS-AdamW** instantiation,
 | **MARS**-exact  | **3.107**         | TBD                      | TBD                     | 2.980                    | TBD                       | TBD                      | **2.847**          | TBD                       | TBD                      |
 | **MARS**-approx | 3.108                   | **2.969**          | **2.876**         | **2.981**          | **2.763**           | **2.647**          | **2.849**          | **2.636**           | **2.518**          |
 
-**MARS** can achieve better test loss and accuracy than AdamW and the [Muon]([https://github.com/KellerJordan/modded-nanogpt](https://github.com/KellerJordan/modded-nanogpt/tree/e01b457c7c52e1cd0c592920499a016f5289a69e)) optimizers on CIFAR-10 and CIFAR-100 datasets with ResNet-18:
+**MARS** can achieve better test loss and accuracy than AdamW and the [Muon]([https://github.com/KellerJordan/modded-nanogpt](https://github.com/KellerJordan/modded-nanogpt/tree/e01b457c7c52e1cd0c592920499a016f5289a69e)) optimizers on CIFAR-10 and CIFAR-100 datasets with ResNet-18 and MultiStepLR(optimizer, milestones=[100, 150], gamma=0.1) scheduler (We display the best results for each optimizer with grid search of base learning rate within [$10^{-5}$, ..., $10^{-1}$]):
 
 | Dataset                 | **CIFAR-10**                                       | **CIFAR-100**                                       |
 | ----------------------- | -------------------------------------------------------- | --------------------------------------------------------- |
 | **Test loss**     | <img src="assets/cifar10_test_loss.png" width="350"> | <img src="assets/cifar100_test_loss.png" width="350"> |
-| **Test Accuracy** | <img src="assets/cifar10_test_acc.png" width="350">  | <img src="assets/cifar100_test_acc.png" width="350">  |
+| **Test Accuracy** | <img src="assets/cifar10_test_acc.png" width="350">  | <img src="assets/cifar100_test_acc.png" width="350"> |
+
+| Best Test loss        | CIFAR-10   | CIFAR-100  |
+| --------------------- | ---------- | ---------- |
+| AdamW                 | 0.306      | 2.608      |
+| Muon                  | 0.230      | 1.726      |
+| **MARS**-approx | **0.199** | **0.971** |
+
+| Best Test Accuracy (%) | CIFAR-10        | CIFAR-100       |
+| ---------------------- | --------------- | --------------- |
+| AdamW                  | 73.7            | 94.81           |
+| Muon                   | 74.64           | 95.08           |
+| **MARS**-approx  | **76.97** | **95.29** |
 
 #### Efficiency of MARS
 
