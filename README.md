@@ -6,6 +6,7 @@ Authors: [Huizhuo Yuan](https://scholar.google.com/citations?user=8foZzX4AAAAJ)\
 
 ## 🔔 NEWS
 
+- **[11/26/2024]** CV tasks added.
 - **[11/18/2024]** Our code is open-sourced!
 - **[11/15/2024]** Our paper is released on arXiv: https://arxiv.org/abs/2411.10438.
 
