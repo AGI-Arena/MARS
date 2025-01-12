@@ -112,6 +112,8 @@ The **MARS** algorithm can achieve better performance not only within the same n
 
 #### Experiments on FineWeb-Edu
 
+Below are the training and validation loss curves for both GPT‑2 Small and GPT‑2 XL when using our MARS approach versus AdamW. As you can see, MARS often yields faster convergence and consistently lower losses across different training steps.
+
 | Model                 | **GPT-2 small**                                       | **GPT-2 XL**                                       |
 | ----------------------- | -------------------------------------------------------- | --------------------------------------------------------- |
 | **Train Loss**     | <img src="assets/small_train.png" width="350"> | <img src="assets/xl_train.png" width="350"> |
@@ -123,6 +125,7 @@ Below, we present the evaluation metrics on the FineWeb-Edu dataset for both GPT
 <img src="assets/fineweb_hella.png" width="350">
 
 **Results on GPT-2 small**
+
 MARS-AdamW shows a clear improvement over AdamW and the OpenAI baseline across multiple tasks, with the **highest average score** of 45.93 on GPT‑2 Small.
 | Method/Task       | ARC-E | ARC-C | BoolQ | HellaSwag | OBQA  | PIQA  | WG    | MMLU  | SciQ  | Avg.  |
 |--------------|-------|-------|-------|-----------|-------|-------|-------|-------|-------|-------|
@@ -132,12 +135,13 @@ MARS-AdamW shows a clear improvement over AdamW and the OpenAI baseline across m
 
 **Results on GPT-2 XL**
 
+On GPT‑2 XL, MARS-AdamW continues to outperform AdamW across most tasks, delivering an impressive **HellaSwag accuracy of 56.52**.
+
 | Method/Task       | ARC-E | ARC-C | BoolQ | HellaSwag | OBQA  | PIQA  | WG    | MMLU  | SciQ  | Avg.  |
 |--------------|-------|-------|-------|-----------|-------|-------|-------|-------|-------|-------|
 | OpenAI-Comm. | 51.05 | 28.50 | 61.77 | 50.89     | 32.00 | 70.51 | **58.33** | 25.24 | 76.00 | 50.48 |
 | AdamW        | **68.22** | 38.40 | 61.13 | 53.93     | 39.00 | 72.69 | 54.78 | **25.47** | 85.30 | 55.43 |
 | MARS-AdamW   | 66.54 | **39.85** | **63.82** | **56.52**     | **41.20** | **73.34** | 56.59 | 23.86 | **86.00** | **56.41** |
-On GPT‑2 XL, MARS-AdamW continues to outperform AdamW across most tasks, delivering an impressive **HellaSwag accuracy of 56.52**.
 
 ---
 
