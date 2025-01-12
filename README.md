@@ -118,23 +118,26 @@ The **MARS** algorithm can achieve better performance not only within the same n
 | **Validation Loss** | <img src="assets/small_val.png" width="350">  | <img src="assets/xl_val.png" width="350"> |
 
 ##### Evaluation Metrics
+Below, we present the evaluation metrics on the FineWeb-Edu dataset for both GPT‑2 Small and GPT‑2 XL, comparing OpenAI GPT2 baseline, AdamW, and our MARS-AdamW optimizer.
+
 <img src="assets/fineweb_hella.png" width="350">
 
-Results on GPT-2 small
+**Results on GPT-2 small**
+MARS-AdamW shows a clear improvement over AdamW and the OpenAI baseline across multiple tasks, with the **highest average score** of 45.93 on GPT‑2 Small.
 | Method/Task       | ARC-E | ARC-C | BoolQ | HellaSwag | OBQA  | PIQA  | WG    | MMLU  | SciQ  | Avg.  |
 |--------------|-------|-------|-------|-----------|-------|-------|-------|-------|-------|-------|
 | OpenAI-Comm. | 39.48 | 22.70 | 48.72 | 31.14     | 27.20 | 62.51 | **51.62** | 22.92 | 64.40 | 41.19 |
 | AdamW        | 51.43 | 26.54 | 55.78 | 36.26     | 30.60 | 64.53 | 50.36 | **24.49** | **71.50** | 45.72 |
 | MARS-AdamW   | **52.23** | **27.39** | **55.84** | **36.91**    | **32.20** | **64.80** | 49.96 | 22.95 | 71.10 | **45.93** |
 
-Results on GPT-2 XL
+**Results on GPT-2 XL**
+
 | Method/Task       | ARC-E | ARC-C | BoolQ | HellaSwag | OBQA  | PIQA  | WG    | MMLU  | SciQ  | Avg.  |
 |--------------|-------|-------|-------|-----------|-------|-------|-------|-------|-------|-------|
 | OpenAI-Comm. | 51.05 | 28.50 | 61.77 | 50.89     | 32.00 | 70.51 | **58.33** | 25.24 | 76.00 | 50.48 |
 | AdamW        | **68.22** | 38.40 | 61.13 | 53.93     | 39.00 | 72.69 | 54.78 | **25.47** | 85.30 | 55.43 |
-| Muon         |       |
 | MARS-AdamW   | 66.54 | **39.85** | **63.82** | **56.52**     | **41.20** | **73.34** | 56.59 | 23.86 | **86.00** | **56.41** |
-
+On GPT‑2 XL, MARS-AdamW continues to outperform AdamW across most tasks, delivering an impressive **HellaSwag accuracy of 56.52**.
 
 ---
 
