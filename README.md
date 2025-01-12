@@ -112,6 +112,30 @@ The **MARS** algorithm can achieve better performance not only within the same n
 
 #### Experiments on FineWeb-Edu
 
+| Model                 | **GPT-2 small**                                       | **GPT-2 XL**                                       |
+| ----------------------- | -------------------------------------------------------- | --------------------------------------------------------- |
+| **Train Loss**     | <img src="assets/small_train.png" width="350"> | <img src="assets/xl_train.png" width="350"> |
+| **Validation Loss** | <img src="assets/small_val.png" width="350">  | <img src="assets/xl_val.png" width="350"> |
+
+##### Evaluation Metrics
+<img src="assets/fineweb_hella.png" width="350">
+
+Results on GPT-2 small
+| Method/Task       | ARC-E | ARC-C | BoolQ | HellaSwag | OBQA  | PIQA  | WG    | MMLU  | SciQ  | Avg.  |
+|--------------|-------|-------|-------|-----------|-------|-------|-------|-------|-------|-------|
+| OpenAI-Comm. | 39.48 | 22.70 | 48.72 | 31.14     | 27.20 | 62.51 | **51.62** | 22.92 | 64.40 | 41.19 |
+| AdamW        | 51.43 | 26.54 | 55.78 | 36.26     | 30.60 | 64.53 | 50.36 | **24.49** | **71.50** | 45.72 |
+| MARS-AdamW   | **52.23** | **27.39** | **55.84** | **36.91**    | **32.20** | **64.80** | 49.96 | 22.95 | 71.10 | **45.93** |
+
+Results on GPT-2 XL
+| Method/Task       | ARC-E | ARC-C | BoolQ | HellaSwag | OBQA  | PIQA  | WG    | MMLU  | SciQ  | Avg.  |
+|--------------|-------|-------|-------|-----------|-------|-------|-------|-------|-------|-------|
+| OpenAI-Comm. | 51.05 | 28.50 | 61.77 | 50.89     | 32.00 | 70.51 | **58.33** | 25.24 | 76.00 | 50.48 |
+| AdamW        | **68.22** | 38.40 | 61.13 | 53.93     | 39.00 | 72.69 | 54.78 | **25.47** | 85.30 | 55.43 |
+| Muon         |       |
+| MARS-AdamW   | 66.54 | **39.85** | **63.82** | **56.52**     | **41.20** | **73.34** | 56.59 | 23.86 | **86.00** | **56.41** |
+
+
 ---
 
 #### Experiments on Vision Tasks
