@@ -284,12 +284,31 @@ $ torchrun --standalone --nproc_per_node=8 \
       --gradient_accumulation_steps=12
 ```
 
+#### **Reproducing GPT-2 XL (1.5B) Results on FineWeb-Edu**
+```
+$ bash scripts/run_mars_xl_fw.sh
+```
+
+or
+
+```
+$ torchrun --standalone --nproc_per_node=8 \
+      MARS/train_mars_fw.py \
+      config/train_gpt2_xl_mars.py \
+      --batch_size=5 \
+      --gradient_accumulation_steps=12
+```
+
 #### Reproducing Baseline Results
 
 To reproduce the AdamW baseline:
 
 ```
 bash scripts/run_adamw_{small/medium/large}.sh
+```
+To reproduce the AdamW baseline on FineWeb-Edu:
+```
+bash scripts/run_adamw_{small/xl}_fw.sh
 ```
 
 To reproduce the Muon baseline following [modded-nanogpt](https://github.com/KellerJordan/modded-nanogpt/tree/e01b457c7c52e1cd0c592920499a016f5289a69e):
@@ -307,8 +326,9 @@ Please adjust ``nproc_per_node``, ``batch_size``, and ``gradient_accumulation_st
 | GPT-2 small |    125M    |     6e-4     |    2e-2    |    6e-3    |      3e-3      |     1e-1     |     0.0     |    1e-2    |
 | GPT-2 medium |    355M    |     3e-4     |    1e-2    |    3e-3    |     1.5e-3     |     1e-1     |     0.0     |    1e-2    |
 | GPT-2 large |    770M    |     2e-4     |   6.67e-3   |    2e-3    |      1e-3      |     1e-1     |     0.0     |    1e-2    |
+| GPT-2 xl |    1.5B    |     2e-4     |   -   |    2e-3    |      1e-3      |     1e-1     |     -     |    1e-2    |
 
-Note that different hyperparameters may benefit different stages of training. For the GPT-2 Small model, our **MARS** optimizer is tuned to prioritize the best final validation performance. If faster progress in the earlier stages of training is desired, using `wd=1e-3` may provide better results.
+
 
 ### Customized Training
 
