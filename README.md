@@ -7,7 +7,7 @@ Authors: [Huizhuo Yuan](https://scholar.google.com/citations?user=8foZzX4AAAAJ)\
 ## 🔔 NEWS
 
 - **[01/12/2025]** Our pretraining results on GPT2-XL are available.
-- **[11/26/2024]** CV tasks added.
+- **[11/26/2024]** Vision tasks added.
 - **[11/18/2024]** Our code is open-sourced!
 - **[11/15/2024]** Our paper is released on arXiv: https://arxiv.org/abs/2411.10438.
 
@@ -80,7 +80,9 @@ $$
 
 In practice, we use the [Newton-Schulz iteration](https://github.com/KellerJordan/modded-nanogpt) to accelerate and approximate the solution of SVD problem.
 
-#### **Performance of MARS Compared to Baselines**
+### **Performance of MARS Compared to Baselines**
+
+#### Experiments on OpenWebText
 
 Experimental results for **MARS** are based on the **MARS-AdamW** instantiation, unless otherwise stated. In our experiments, gradients are calculated once per sample and per update (**MARS**-approx in our [paper](https://arxiv.org/abs/2411.10438)). Performing exact gradient computation with two evaluations per update, as in the exact form of **MARS**, can slightly enhance performance but at the cost of doubling the computational expense. For more details, refer to our [paper](https://arxiv.org/abs/2411.10438).
 
@@ -107,7 +109,12 @@ The **MARS** algorithm can achieve better performance not only within the same n
 | <img src="assets/time_small.png" width="350"> | <img src="assets/time_medium.png" width="350"> | <img src="assets/time_large.png" width="350"> |
 
 ---
-#### Experiments on CV Tasks
+
+#### Experiments on FineWeb-Edu
+
+---
+
+#### Experiments on Vision Tasks
 
 **MARS** can achieve better test loss and accuracy than AdamW and the [Muon]([https://github.com/KellerJordan/modded-nanogpt](https://github.com/KellerJordan/modded-nanogpt/tree/e01b457c7c52e1cd0c592920499a016f5289a69e)) optimizers on CIFAR-10 and CIFAR-100 datasets with ResNet-18 and MultiStepLR(optimizer, milestones=[100, 150], gamma=0.1) scheduler (We display the best results for each optimizer with grid search of base learning rate within [1e-5, ..., 1e-1]):
 
@@ -127,9 +134,6 @@ The **MARS** algorithm can achieve better performance not only within the same n
 | AdamW                  | 73.7            | 94.81           |
 | Muon                   | 74.64           | 95.08           |
 | **MARS**-approx  | **76.97** | **95.29** |
-
-#### Experiments on FineWeb-Edu
-
 
 
 ## Training GPT-2 from Scratch:
