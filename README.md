@@ -162,9 +162,9 @@ On GPT‑2 XL, MARS-AdamW continues to outperform AdamW across most tasks, deliv
 
 | Best Test Accuracy (%) | CIFAR-10        | CIFAR-100       |
 | ---------------------- | --------------- | --------------- |
-| AdamW                  | 73.7            | 94.81           |
-| Muon                   | 74.64           | 95.08           |
-| **MARS**-approx  | **76.97** | **95.29** |
+| AdamW                  | 94.81            | 73.7           |
+| Muon                   | 95.08           | 74.64           |
+| **MARS**-approx  | **95.29** | **76.97** |
 
 
 ## Training GPT-2 from Scratch:
