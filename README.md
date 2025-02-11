@@ -5,6 +5,7 @@ This repository contains the official code for the paper [MARS: Unleashing the P
 Authors: [Huizhuo Yuan](https://scholar.google.com/citations?user=8foZzX4AAAAJ)\*, [Yifeng Liu](https://scholar.google.com/citations?user=mFvOVkMAAAAJ&hl=zh-CN)\*, Shuang Wu, Xun Zhou, [Quanquan Gu](https://web.cs.ucla.edu/~qgu/)
 
 ## 🔔 NEWS
+- **[02/10/2025]** Our paper is updated on ArXiv: https://arxiv.org/pdf/2411.10438v2.
 - **[01/12/2025]** Update scripts for reproducing GPT-2 XL results and FineWeb-Edu results.
 - **[01/12/2025]** Our pretraining results on FineWeb-Edu are available. GPT-2 XL reaches a Hellaswag accuracy of 56.52 in 50B tokens.
 - **[11/26/2024]** Vision tasks added.
