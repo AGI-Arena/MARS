@@ -374,7 +374,7 @@ for epoch in range(epochs):
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=AGI-Arena/MARS&type=Date)](https://star-history.com/#AGI-Arena/MARS&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=AGI-Arena/MARS&type=Date)](https://www.star-history.com/#AGI-Arena/MARS&Date)
 
 ## Citation
 
