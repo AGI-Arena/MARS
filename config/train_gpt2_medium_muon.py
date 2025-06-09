@@ -13,7 +13,7 @@ dropout = 0.0 # for pretraining 0 is good, for finetuning try 0.1+
 bias = False
 scale_attn_by_inverse_layer_idx = True
 
-# this makes total number of tokens be 300B
+# this makes total number of tokens be ~50B
 max_iters = 100000
 lr_decay_iters = 100000
 
