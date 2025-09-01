@@ -248,14 +248,27 @@ def estimate_loss():
 
 # learning rate decay scheduler (cosine with warmup)
 def get_lr(it, schedule='cosine', base_lr=learning_rate):
+    #ing rate schedule {schedule}")
     # 1) linear warmup for warmup_iters steps
     if it < warmup_iters:
         return base_lr * it / warmup_iters
-    elif it < max_iters - warmdown_iters:
-        return base_lr
-    else:
-        decay_ratio = (max_iters - it) / warmdown_iters
-        return base_lr * decay_ratio
+    # 2) if it > lr_decay_iters, return min learning rate
+    if schedule=='wsd':
+        if it < 0.8 * max_iters:
+            return base_lr
+        else:
+            return base_lr * (max_iters - it) / (max_iters * 0.2)
+    if it > lr_decay_iters:
+        return min_lr
+    # 3) in between, use cosine decay down to min learning rate
+    decay_ratio = (it - warmup_iters) / (lr_decay_iters - warmup_iters)
+    assert 0 <= decay_ratio <= 1
+    if schedule=='cosine':
+        coeff = 0.5 * (1.0 + math.cos(math.pi * decay_ratio)) # coeff ranges 0..1
+    elif schedule=='exp':
+        coeff = np.power(0.9, 100 * decay_ratio)
+        
+    return min_lr + coeff * (base_lr - min_lr)
 
 # logging
 if wandb_log and master_process:
