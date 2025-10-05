@@ -1,1 +1,1 @@
-python MARS/train_CV.py
+python train_CV.py
