@@ -135,7 +135,7 @@ For more detailed hyperparameter examples, refer to:
 
 #### **Reproducing GPT-2 Small (125M) Results**
 
-Training with MARS using
+Training with MARS-M using
 
 ```
 $ bash scripts/run_mars_m_small.sh
@@ -145,7 +145,7 @@ or
 
 ```
 $ torchrun --standalone --nproc_per_node=8 \
-      MARS/train_mars_m.py \
+      train_mars_m.py \
       config/train_gpt2_small_mars_m.py \
       --batch_size=15 \
       --gradient_accumulation_steps=4
@@ -153,7 +153,7 @@ $ torchrun --standalone --nproc_per_node=8 \
 
 #### Reproducing GPT2 Medium (355M) Results
 
-Training with MARS using
+Training with MARS-M using
 
 ```
 $ bash scripts/run_mars_m_medium.sh
@@ -163,7 +163,7 @@ or
 
 ```
 $ torchrun --standalone --nproc_per_node=8 \
-      MARS/train_mars.py \
+      train_mars_m.py \
       config/train_gpt2_medium_mars_m.py \
       --batch_size=15 \
       --gradient_accumulation_steps=4
@@ -171,7 +171,7 @@ $ torchrun --standalone --nproc_per_node=8 \
 
 #### Reproducing GPT2 Large (770M) Results
 
-Training with MARS using
+Training with MARS-M using
 
 ```
 $ bash scripts/run_mars_m_large.sh
@@ -181,7 +181,7 @@ or
 
 ```
 $ torchrun --standalone --nproc_per_node=8 \
-      MARS/train_mars.py \
+      train_mars_m.py \
       config/train_gpt2_large_mars_m.py \
       --batch_size=5 \
       --gradient_accumulation_steps=12
@@ -197,7 +197,7 @@ or
 
 ```
 $ torchrun --standalone --nproc_per_node=8 \
-      MARS/train_mars_fw.py \
+      train_mars_m_fw.py \
       config/train_gpt2_xl_mars_m.py \
       --batch_size=5 \
       --gradient_accumulation_steps=12
