@@ -53,7 +53,7 @@ In our experiments, gradients are calculated once per sample and per update (**M
 
 | **GPT-2 small**                            | **GPT-2 medium**                            | **GPT-2 large**                            |
 | ------------------------------------------------ | ------------------------------------------------- | ------------------------------------------------ |
-| `<img src="assets/val_small.png" width="350">` | `<img src="assets/val_medium.png" width="350">` | `<img src="assets/val_large.png" width="350">` |
+| `<img src="MARS_M/assets/val_small.png" width="350">` | `<img src="MARS_M/assets/val_medium.png" width="350">` | `<img src="MARS_M/assets/val_large.png" width="350">` |
 
 ---
 
@@ -63,8 +63,8 @@ Below are the training and validation loss curves for both GPT‑2 Small and GPT
 
 | Model                     | **GPT-2 small**                              | **GPT-2 XL**                              |
 | ------------------------- | -------------------------------------------------- | ----------------------------------------------- |
-| **Train Loss**      | `<img src="assets/small_train.png" width="350">` | `<img src="assets/xl_train.png" width="350">` |
-| **Validation Loss** | `<img src="assets/small_val.png" width="350">`   | `<img src="assets/xl_val.png" width="350">`   |
+| **Train Loss**      | `<img src="MARS_M/assets/small_train.png" width="350">` | `<img src="MARS_M/assets/xl_train.png" width="350">` |
+| **Validation Loss** | `<img src="MARS_M/assets/small_val.png" width="350">`   | `<img src="MARS_M/assets/xl_val.png" width="350">`   |
 
 ## Training GPT-2 from Scratch:
 
