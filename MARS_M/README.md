@@ -1,4 +1,4 @@
-# MARS: Unleashing the Power of Variance Reduction for Training Large Models
+# MARS-M: When Variance Reduction Meets Matrices
 
 This repository contains the official code for the paper "MARS-M: When Variance Reduction Meets Matrices".
 
