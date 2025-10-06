@@ -10,9 +10,9 @@ Authors: [Yifeng Liu](https://scholar.google.com/citations?user=mFvOVkMAAAAJ&hl=
 
 ## MARS-M
 
-**MARS-M** is a brand-new optimizer that integrates matrix-level adaptive learning methods (e.g., Muon) into the MARS framework to reduce high stochastic gradient variance in the training process.
+**MARS-M** is a brand-new optimizer that integrates matrix-based optimizer (i.e., Muon and Moonlight) with the variance-reduction based optimizer MARS to reduce high stochastic gradient variance in the training process.
 
-The **MARS-M** optimizer is built on **MARS** framework:
+In detail, the **MARS-M** optimizer is built on **MARS** framework:
 
 $$
 \mathbf{c}\_t = \nabla f(\mathbf{x}\_t, \mathbf{\xi}\_t)+\underbrace{{\color{red}\gamma_t} \frac{\beta_{1}}{1-\beta_{1}} \left(\nabla f(\mathbf{x}\_t, \mathbf{\xi}\_t)-\nabla f(\mathbf{x}\_{t-1}, \mathbf{\xi}\_t)\right)}_{\text{scaled gradient correction}}
@@ -34,7 +34,7 @@ $$
 \\|\_{\mathbf{H}_t}^2\right\\}
 $$
 
-Here ${\color{red}\gamma_t}$ is a scaling parameter that controls the strength of gradient correction.
+Here ${\color{red}\gamma_t}$ is a scaling parameter that controls the strength of gradient correction and plays a central role in MARS.
 
 Under the **MARS** framework, we propose **MARS-M** that incorporates MARS with matrix-level optimizers (Enable with  `optimizers/mars_m.py`):
 
@@ -269,7 +269,12 @@ for epoch in range(epochs):
 If you find this repo useful for your research, please consider citing the paper
 
 ```tex
-TBD
+@article{Liu2025MARSM,
+  title={MARS-M: When Variance Reduction Meets Matrices},
+  author={Liu, Yifeng and and Yuan, Huizhuo and Gu, Quanquan},
+  journal={arXiv preprint arXiv:XXXX.XXXXX},
+  year={2025}
+}
 ```
 
 ## Acknowledgements
