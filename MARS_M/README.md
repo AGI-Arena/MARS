@@ -1,6 +1,6 @@
 # MARS-M: When Variance Reduction Meets Matrices
 
-This repository contains the official code for the paper "MARS-M: When Variance Reduction Meets Matrices".
+This repository contains the official code for our project "MARS-M: When Variance Reduction Meets Matrices".
 
 Authors: [Yifeng Liu](https://scholar.google.com/citations?user=mFvOVkMAAAAJ&hl=zh-CN)\*, [Angela Yuan](https://scholar.google.com/citations?user=8foZzX4AAAAJ)\*, [Quanquan Gu](https://web.cs.ucla.edu/~qgu/)
 
@@ -98,7 +98,7 @@ $$
 
 #### Experiment Settings
 
-We implement grid search on learning rates for AdamW and Muon (Moonlight) and use the same hyper-parameters of Muon (Moonlight) for experiments with **MARS-M**
+We implement grid search on learning rates for AdamW and Muon (Moonlight) and use the same hyper-parameters of Muon (Moonlight) for experiments with **MARS-M**.
 
 #### Experiments on OpenWebText
 
@@ -334,7 +334,7 @@ for epoch in range(epochs):
 
 ## Citation
 
-If you find this repo useful for your research, please consider citing the paper
+If you find this repo useful for your research, please consider citing our github repository:
 
 ```tex
 @misc{liu2025MARS,
