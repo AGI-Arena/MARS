@@ -36,7 +36,7 @@ $$
 
 Here ${\color{red}\gamma_t}$ is a scaling parameter that controls the strength of gradient correction and plays a central role in MARS.
 
-Under the **MARS** framework, we propose **MARS-M** that incorporates MARS with matrix-level optimizers (Enable with  `optimizers/mars_m.py`):
+Under the **MARS** framework, we propose **MARS-M** that applies MARS to matrix-based optimizers (See  `optimizers/mars_m.py` for the implementation):
 
 $$
 \mathbf{O}_t=\text{NewtonSchulz}(\mathbf{m}_t),\qquad 
@@ -47,7 +47,7 @@ $$
 
 #### Experiments on OpenWebText
 
-In our experiments, gradients are calculated once per sample and per update (**MARS-M**-approx). Performing exact gradient computation with two evaluations per update, as in the exact form of **MARS-M**, can slightly enhance performance but at the cost of doubling the computational expense.
+In our experiments, gradients are calculated once per sample and per update (**MARS-M**-approx). Performing exact gradient computation with two evaluations per update, as in the exact form of **MARS-M**, can slightly enhance performance but at the cost of doubling the computational cost.
 
 **MARS-M** consistently outperforms [Muon (Moonlight version)](https://arxiv.org/abs/2502.16982) optimizers across GPT-2 models:
 
