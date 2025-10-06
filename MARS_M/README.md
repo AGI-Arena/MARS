@@ -2,7 +2,7 @@
 
 This repository contains the official code for the paper "MARS-M: When Variance Reduction Meets Matrices".
 
-Authors: [Yifeng Liu](https://scholar.google.com/citations?user=mFvOVkMAAAAJ&hl=zh-CN)\*, [Huizhuo Yuan](https://scholar.google.com/citations?user=8foZzX4AAAAJ)\*, [Quanquan Gu](https://web.cs.ucla.edu/~qgu/)
+Authors: [Yifeng Liu](https://scholar.google.com/citations?user=mFvOVkMAAAAJ&hl=zh-CN)\*, [Angela Yuan](https://scholar.google.com/citations?user=8foZzX4AAAAJ)\*, [Quanquan Gu](https://web.cs.ucla.edu/~qgu/)
 
 ## 🔔 NEWS
 
@@ -94,24 +94,41 @@ $$
 
 ---
 
-### **Performance of MARS-M Compared to Baseline of Muon (Moonlight)**
+### **Performance of MARS-M Compared to Baseline of Muon (Moonlight) and AdamW**
+
+#### Experiment Settings
+
+We implement grid search on learning rates for AdamW and Muon (Moonlight) and use the same hyper-parameters of Muon (Moonlight) for experiments with **MARS-M**
 
 #### Experiments on OpenWebText
 
-In our experiments, gradients are calculated once per sample and per update (**MARS-M**-approx). Performing exact gradient computation with two evaluations per update, as in the exact form of **MARS-M**, can slightly enhance performance but at the cost of doubling the computational cost.
+In our experiments, gradients are calculated once per sample and per update (**MARS-M**-approx). Performing exact gradient computation with two evaluations per update, as in the exact form of **MARS-M**, can slightly enhance performance but at the cost of doubling the computational cost. Moreover, **MARS-M** also outperforms AdamW for the best loss value. 
 
 **MARS-M** consistently outperforms [Muon (Moonlight version)](https://arxiv.org/abs/2502.16982) optimizers across GPT-2 models:
 
 | **GPT-2 small**                            | **GPT-2 medium**                            | **GPT-2 large**                            |
 | ------------------------------------------------ | ------------------------------------------------- | ------------------------------------------------ |
-| <img src="assets/val_small.png" width="350"> | <img src="assets/val_medium.png" width="350"> | <img src="assets/val_large.png" width="350"> |
+| <img src="assets/val_small_global.png" width="350"> | <img src="assets/val_medium_global.png" width="350"> | <img src="assets/val_large_global.png" width="350"> |
 
 ---
 
+Zoomed-in loss curves
+| **GPT-2 small**                            | **GPT-2 medium**                            | **GPT-2 large**                            |
+| ------------------------------------------------ | ------------------------------------------------- | ------------------------------------------------ |
+| <img src="assets/val_small.png" width="350"> | <img src="assets/val_medium.png" width="350"> | <img src="assets/val_large.png" width="350"> |
+
 #### Experiments on FineWeb-Edu
 
-Below are the training and validation loss curves for both GPT‑2 Small and GPT‑2 XL when using our MARS-M approach versus [Muon (Moonlight version)](https://arxiv.org/abs/2502.16982) optimizers. As you can see, MARS-M often yields faster convergence and consistently lower losses across different training steps.
+Below are the training and validation loss curves for both GPT‑2 Small and GPT‑2 XL when using our MARS-M approach versus [Muon (Moonlight version)](https://arxiv.org/abs/2502.16982) optimizers. As you can see, MARS-M often yields faster convergence and consistently lower losses across different training steps. Moreover, **MARS-M** also outperforms AdamW for the best loss value. 
 
+| Model                     | **GPT-2 small**                              | **GPT-2 XL**                              |
+| ------------------------- | -------------------------------------------------- | ----------------------------------------------- |
+| **Train Loss**      | <img src="assets/small_train_global.png" width="350"> | <img src="assets/xl_train_global.png" width="350"> |
+| **Validation Loss** | <img src="assets/small_val_global.png" width="350">   | <img src="assets/xl_val_global.png" width="350">   |
+
+---
+
+Zoomed-in loss curves
 | Model                     | **GPT-2 small**                              | **GPT-2 XL**                              |
 | ------------------------- | -------------------------------------------------- | ----------------------------------------------- |
 | **Train Loss**      | <img src="assets/small_train.png" width="350"> | <img src="assets/xl_train.png" width="350"> |
