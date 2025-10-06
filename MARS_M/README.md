@@ -337,11 +337,11 @@ for epoch in range(epochs):
 If you find this repo useful for your research, please consider citing the paper
 
 ```tex
-@article{Liu2025MARSM,
-  title={MARS-M: When Variance Reduction Meets Matrices},
-  author={Liu, Yifeng and and Yuan, Huizhuo and Gu, Quanquan},
-  journal={arXiv preprint arXiv:XXXX.XXXXX},
-  year={2025}
+@misc{liu2025MARS,
+  author = {Yifeng Liu and Angela Yuan and Quanquan Gu},
+  title  = {MARS-M: When Variance Reduction Meets Matrices},
+  year   = {2025},
+  url    = {https://github.com/AGI-Arena/MARS/tree/main/MARS_M/}
 }
 ```
 
