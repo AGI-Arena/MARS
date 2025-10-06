@@ -14,34 +14,85 @@ Authors: [Yifeng Liu](https://scholar.google.com/citations?user=mFvOVkMAAAAJ&hl=
 
 In detail, the **MARS-M** optimizer is built on **MARS** framework:
 
-$$
-\mathbf{c}\_t = \nabla f(\mathbf{x}\_t, \mathbf{\xi}\_t)+\underbrace{{\color{red}\gamma_t} \frac{\beta_{1}}{1-\beta_{1}} \left(\nabla f(\mathbf{x}\_t, \mathbf{\xi}\_t)-\nabla f(\mathbf{x}\_{t-1}, \mathbf{\xi}\_t)\right)}_{\text{scaled gradient correction}}
-$$
+---
+
+**Algorithm 1** MARS
+
+---
 
 $$
-\tilde{\mathbf{c}}_t = \text{Clip}(\mathbf{c}_t,1) =  \begin{cases}
+\begin{align*}
+&\pmb{input: }\mathbf{x}_0\in\mathbb{R}^{A\times B}, \lambda, \beta, \{\gamma_t\}, \{\eta_t\}\\
+&\text{Set }\mathbf{m}_0\leftarrow \mathbf{0}\textbf{ and }\mathbf{x}_1\leftarrow\mathbf{x}_0\\
+&\pmb{for }\textbf{ }t=1,\pmb{ to }\textbf{ }n\textbf{ }\pmb{ do}\\
+&\qquad\textbf{sample }\mathbf{\xi}_t\textbf{ and let }\mathbf{c}_t = \nabla f(\mathbf{x}_t, \mathbf{\xi}_t)+\gamma_t(\frac{\beta}{1-\beta})\big(\nabla f(\mathbf{x}_t, \mathbf{\xi}_t)-\nabla f(\mathbf{x}_{t-1}, \mathbf{\xi}_t)\big)\\
+&\qquad\mathbf{m}_t = \beta \mathbf{m}_{t-1} + (1-\beta)\text{Clip}(\mathbf{c}_t, 1)\\
+&\qquad\mathbf{x}\_{t+1} = \arg\min_{\mathbf{x} \in \mathbb{R}^d} \left\\{\eta_t \left\langle \mathbf{m}_t, \mathbf{x} \right\rangle + \frac{1}{2} \\|\mathbf{x} - \mathbf{x}\_t
+\\|\_{\mathbf{H}_t}^2\right\\}\\
+&\pmb{end}\textbf{ }\pmb{for}
+\end{align*}
+$$
+
+---
+
+where
+
+$$
+\text{Clip}(\mathbf{c}_t,1) =  \begin{cases}
 \frac{\mathbf{c}_t}{\\|\mathbf{c}_t\\|_2} & \text{if } \\|\mathbf{c}_t\\|_2 > 1,\\
 \mathbf{c}_t & \text{otherwise}.
 \end{cases}
 $$
 
-$$
-\mathbf{m}\_t = \beta_1 \mathbf{m}\_{t-1} + (1-\beta_{1})\tilde{\mathbf{c}}\_t
-$$
 
-$$
-\mathbf{x}\_{t+1} = \arg\min_{\mathbf{x} \in \mathbb{R}^d} \left\\{\eta_t \left\langle \mathbf{m}_t, \mathbf{x} \right\rangle + \frac{1}{2} \\|\mathbf{x} - \mathbf{x}\_t
-\\|\_{\mathbf{H}_t}^2\right\\}
-$$
 
 Here ${\color{red}\gamma_t}$ is a scaling parameter that controls the strength of gradient correction and plays a central role in MARS.
 
 Under the **MARS** framework, we propose **MARS-M** that applies MARS to matrix-based optimizers (See  `optimizers/mars_m.py` for the implementation):
 
+---
+
+**Algorithm 2** MARS-M
+
+---
+
 $$
-\mathbf{O}_t=\text{NewtonSchulz}(\mathbf{m}_t),\qquad 
-    \mathbf{x}\_{t+1} =\mathbf{x}\_t-\eta_t(0.2\cdot\mathbf{O}_t\cdot\sqrt{\max(A,B)}+\lambda\mathbf{x}_t).
+\begin{align*}
+&\pmb{input: }\mathbf{X}_0\in\mathbb{R}^{A\times B}, \lambda, \beta, \{\gamma_t\}, \{\eta_t\}\\
+&\text{Set }\mathbf{M}_0\leftarrow \mathbf{0}\textbf{ and }\mathbf{X}_1\leftarrow\mathbf{X}_0\\
+&\pmb{for }\textbf{ }t=1,\pmb{ to }\textbf{ }n\textbf{ }\pmb{ do}\\
+&\qquad\textbf{sample }\mathbf{\xi}_t\textbf{ and let }\mathbf{C}_t = \nabla f(\mathbf{X}_t, \mathbf{\xi}_t)+\gamma_t(\frac{\beta}{1-\beta})\big(\nabla f(\mathbf{X}_t, \mathbf{\xi}_t)-\nabla f(\mathbf{X}_{t-1}, \mathbf{\xi}_t)\big)\\
+&\qquad\mathbf{M}_t = \beta \mathbf{M}_{t-1} + (1-\beta)\text{Clip}(\mathbf{C}_t, 1)\\
+&\qquad\mathbf{O}_t = \text{NewtonSchulz}(\mathbf{M}_t)\\
+&\qquad\mathbf{X}_{t+1} = \mathbf{X}_t - \eta_t(0.2\cdot\mathbf{O}_t\cdot\sqrt{\max(A,B)} +  \lambda \mathbf{X}_t)\\
+&\pmb{end}\textbf{ }\pmb{for}
+\end{align*}
 $$
+
+---
+
+To accelerate training process, we also propose the approximated version of MARS-M by substituting $f(\mathbf{X}\_{t-1}, \mathbf{\xi}\_t)$ with $f(\mathbf{X}\_{t-1}, \mathbf{\xi}\_{t-1})$ as follows:
+
+---
+
+**Algorithm 3** MARS-M-approx
+
+---
+
+$$
+\begin{align*}
+&\pmb{input: }\mathbf{X}_0\in\mathbb{R}^{A\times B}, \lambda, \beta, \{\gamma_t\}, \{\eta_t\}\\
+&\text{Set }\mathbf{M}_0\leftarrow \mathbf{0}\textbf{ and }\mathbf{X}_1\leftarrow\mathbf{X}_0\\
+&\pmb{for }\textbf{ }t=1,\pmb{ to }\textbf{ }n\textbf{ }\pmb{ do}\\
+&\qquad\textbf{sample }\mathbf{\xi}_t\textbf{ and let }\mathbf{C}_t = \nabla f(\mathbf{X}_t, \mathbf{\xi}_t)+\gamma_t(\frac{\beta}{1-\beta})\big(\nabla f(\mathbf{X}_t, \mathbf{\xi}_t)-\nabla f(\mathbf{X}_{t-1}, \mathbf{\xi}_{t-1})\big)\\
+&\qquad\mathbf{M}_t = \beta \mathbf{M}_{t-1} + (1-\beta)\text{Clip}(\mathbf{C}_t, 1)\\
+&\qquad\mathbf{O}_t = \text{NewtonSchulz}(\mathbf{M}_t)\\
+&\qquad\mathbf{X}_{t+1} = \mathbf{X}_t - \eta_t(0.2\cdot\mathbf{O}_t\cdot\sqrt{\max(A,B)} +  \lambda \mathbf{X}_t)\\
+&\pmb{end}\textbf{ }\pmb{for}
+\end{align*}
+$$
+
+---
 
 ### **Performance of MARS-M Compared to Baseline of Muon (Moonlight)**
 
