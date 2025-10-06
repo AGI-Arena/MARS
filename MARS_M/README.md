@@ -123,7 +123,7 @@ Below are the training and validation loss curves for both GPT‑2 Small and GPT
 
 | Model                     | **GPT-2 small**                              | **GPT-2 XL**                              |
 | ------------------------- | -------------------------------------------------- | ----------------------------------------------- |
-| **Train Loss**      | <img src="assets/small_train_global.png" width="350"> | <img src="assets/xl_train_global.png" width="350"> |
+| **Training Loss**      | <img src="assets/small_train_global.png" width="350"> | <img src="assets/xl_train_global.png" width="350"> |
 | **Validation Loss** | <img src="assets/small_val_global.png" width="350">   | <img src="assets/xl_val_global.png" width="350">   |
 
 ---
@@ -131,7 +131,7 @@ Below are the training and validation loss curves for both GPT‑2 Small and GPT
 Zoomed-in loss curves
 | Model                     | **GPT-2 small**                              | **GPT-2 XL**                              |
 | ------------------------- | -------------------------------------------------- | ----------------------------------------------- |
-| **Train Loss**      | <img src="assets/small_train.png" width="350"> | <img src="assets/xl_train.png" width="350"> |
+| **Training Loss**      | <img src="assets/small_train.png" width="350"> | <img src="assets/xl_train.png" width="350"> |
 | **Validation Loss** | <img src="assets/small_val.png" width="350">   | <img src="assets/xl_val.png" width="350">   |
 
 ## Training GPT-2 from Scratch:
