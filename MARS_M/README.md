@@ -328,10 +328,6 @@ for epoch in range(epochs):
 
 ```
 
-## Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=AGI-Arena/MARS&type=Date)](https://www.star-history.com/#AGI-Arena/MARS&Date)
-
 ## Citation
 
 If you find this repo useful for your research, please consider citing our github repository:
