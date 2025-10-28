@@ -1,11 +1,11 @@
 # MARS-M: When Variance Reduction Meets Matrices
 
-This repository contains the official code for our project "MARS-M: When Variance Reduction Meets Matrices".
+This repository contains the official code for the paper [MARS-M: When Variance Reduction Meets Matrices](https://arxiv.org/abs/2510.21800).
 
 Authors: [Yifeng Liu](https://scholar.google.com/citations?user=mFvOVkMAAAAJ&hl=zh-CN)\*, [Angela Yuan](https://scholar.google.com/citations?user=8foZzX4AAAAJ)\*, [Quanquan Gu](https://web.cs.ucla.edu/~qgu/)
 
 ## 🔔 NEWS
-
+- **[10/20/2025]** Our paper is released on arXiv: https://arxiv.org/abs/2510.21800.
 - **[10/05/2025]** Our code is released.
 
 ## MARS-M
