@@ -1,0 +1,7 @@
+Metadata-Version: 2.1
+Name: mars
+Version: 0.0.1
+Summary: MARS: Unleashing the Power of Variance Reduction for Training Large Models
+Author: Yuan, Huizhuo and Liu, Yifeng and Wu, Shuang and Zhou, Xun and Gu, Quanquan
+Requires-Python: >=3.8
+Requires-Dist: torch

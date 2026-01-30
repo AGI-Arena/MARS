@@ -1,0 +1,12 @@
+mars.py
+setup.py
+./fused_mars/fused_mars_kernel.cu
+./fused_mars/multi_tensor_mars_kernel.cu
+fused_mars/fused_mars_kernel.cu
+fused_mars/multi_tensor_mars_kernel.cu
+fused_mars/pybind_mars.cpp
+mars.egg-info/PKG-INFO
+mars.egg-info/SOURCES.txt
+mars.egg-info/dependency_links.txt
+mars.egg-info/requires.txt
+mars.egg-info/top_level.txt
