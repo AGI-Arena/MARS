@@ -11,6 +11,8 @@ For multi-tensor implementation, pass the argument "foreach=True" to MARS optimi
 
 Fused multi-tensor MARS requires further improvements and optimizations.
 
+Thank Adan for the reference implementation:
+https://github.com/sail-sg/Adan
 """
 
 import os
