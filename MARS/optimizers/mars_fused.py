@@ -24,7 +24,6 @@ from torch.optim.optimizer import (
     Optimizer,
 )
 
-# TODO: when mars_type == "mars-shampoo"
 # TODO: _fused_mars_single_tensor: when mars_type == "mars-lion"/"mars-shampoo"/"mars-sgd"; currently c_t is not clipped
 # Thanks to Adan: https://github.com/sail-sg/Adan
 # For fused_mars: first python setup.py install
@@ -358,9 +357,9 @@ def _multi_tensor_mars(
             c_t = torch._foreach_sub(device_grads, device_last_grads)
             torch._foreach_mul_(c_t, gamma * (device_beta1 / (1. - device_beta1)))
             torch._foreach_add_(c_t, device_grads)
-            # if c_t_norm > 1. for some c_t, then clip c_t to c_t / c_t_norm
+            # clip c_t to unit norm without GPU-CPU sync
             c_t_norm = torch._foreach_norm(c_t)
-            c_t = [c_t[i] / c_t_norm[i] if c_t_norm[i] > 1.0 else c_t[i] for i in range(len(c_t))]
+            torch._foreach_div_(c_t, [torch.clamp(n, min=1.0) for n in c_t_norm])
             
             torch._foreach_lerp_(device_exp_avgs, c_t, 1 - device_beta1)
 
@@ -369,19 +368,20 @@ def _multi_tensor_mars(
                 torch._foreach_mul_(device_exp_avg_sqs, beta2)
 
                 if isinstance(beta2, torch.Tensor):
-                    scaled_device_grads = torch._foreach_mul(device_grads, 1 - beta2)  # type: ignore[assignment]
+                    scaled_c_t = torch._foreach_mul(c_t, 1 - beta2)  # type: ignore[assignment]
                     value = 1.0
                 else:
-                    scaled_device_grads = device_grads  # type: ignore[assignment]
+                    scaled_c_t = c_t  # type: ignore[assignment]
                     value = 1 - beta2
 
                 torch._foreach_addcmul_(
-                    device_exp_avg_sqs, scaled_device_grads, device_grads, value
+                    device_exp_avg_sqs, scaled_c_t, c_t, value
                 )
 
                 # Delete the local intermediate(s) since they won't be used anymore to save on peak memory
                 del device_grads
-                del scaled_device_grads
+                del scaled_c_t
+                del c_t
 
                 bias_correction1 = [
                     1 - beta1 ** _get_value(step) for step in device_state_steps
@@ -421,95 +421,145 @@ def _multi_tensor_mars(
                 del signs
             elif mars_type == "mars-sgd":
                 torch._foreach_add_(device_params, torch._foreach_mul(device_exp_avgs, -lr))
+            elif mars_type == "mars-shampoo":
+                # 2D params: NewtonSchulz orthogonalized update (no second moment needed).
+                # 1D params: AdamW fallback using the MARS betas (same as mars-adamw for 1D).
+                is_2d = [len(device_params[j].shape) == 2 for j in range(len(device_params))]
+                idx_2d = [j for j, x in enumerate(is_2d) if x]
+                idx_1d = [j for j, x in enumerate(is_2d) if not x]
+
+                ns_scale = 1. / (1. - device_beta1)
+                for j in idx_2d:
+                    factor = max(1, device_params[j].size(0) / device_params[j].size(1)) ** 0.5
+                    ns_update = NewtonSchulz(device_exp_avgs[j].mul(ns_scale), eps=eps)
+                    device_params[j].add_(ns_update.mul(factor).mul(-lr))
+
+                if idx_1d:
+                    ea_sq_1d  = [device_exp_avg_sqs[j]   for j in idx_1d]
+                    c_t_1d    = [c_t[j]                  for j in idx_1d]
+                    steps_1d  = [device_state_steps[j]   for j in idx_1d]
+
+                    torch._foreach_mul_(ea_sq_1d, beta2)
+                    torch._foreach_addcmul_(ea_sq_1d, c_t_1d, c_t_1d, value=1 - beta2)
+
+                    bc1_sh = [1 - beta1 ** _get_value(s) for s in steps_1d]
+                    bc2_sh = [1 - beta2 ** _get_value(s) for s in steps_1d]
+                    step_size_sh = _stack_if_compiling([(lr / bc) * -1 for bc in bc1_sh])
+                    bc2_sqrt_sh  = [bc ** 0.5 for bc in bc2_sh]
+
+                    if amsgrad:
+                        max_ea_sq_sh = cast(List[Tensor], [device_max_exp_avg_sqs_[j] for j in idx_1d])
+                        torch._foreach_maximum_(max_ea_sq_sh, ea_sq_1d)
+                        sq_sqrt = torch._foreach_sqrt(max_ea_sq_sh)
+                    else:
+                        sq_sqrt = torch._foreach_sqrt(ea_sq_1d)
+
+                    torch._foreach_div_(sq_sqrt, bc2_sqrt_sh)
+                    torch._foreach_add_(sq_sqrt, eps)
+                    p_1d_sh = [device_params[j]   for j in idx_1d]
+                    ea_1d_sh = [device_exp_avgs[j] for j in idx_1d]
+                    torch._foreach_addcdiv_(p_1d_sh, ea_1d_sh, sq_sqrt, step_size_sh)
+                    del sq_sqrt
+
+                del c_t
         else:
-            is_param_2d = [len(device_params[i].shape) == 2 for i in range(len(device_params))]
-            is_param_2d_float = [torch.tensor(float(is_param_2d[i])).to(device_params.device) for i in range(len(device_params))]
-            is_param_not_2d_float = [torch.tensor(float(not is_param_2d[i])).to(device_params.device) for i in range(len(device_params))]
+            # When optimize_1d=False: 2D params use MARS update, 1D params use AdamW update.
+            # Split params by dimensionality and process each group separately.
+            indices_2d = [i for i in range(len(device_params)) if len(device_params[i].shape) == 2]
+            indices_1d = [i for i in range(len(device_params)) if len(device_params[i].shape) != 2]
 
-            element_lr = torch._foreach_add(torch._foreach_mul(is_param_not_2d_float, lr * lr_1d_factor), lr)
-            if weight_decay != 0:
-                lr_wd_2d = torch._foreach_mul(is_param_2d_float, lr * weight_decay)
-                lr_wd_1d = torch._foreach_mul(is_param_not_2d_float, lr * lr_1d_factor * weight_decay_1d)
-                lr_wd = torch._foreach_add(lr_wd_2d, lr_wd_1d)
-                del lr_wd_2d
-                del lr_wd_1d
-                torch._foreach_mul_(device_params, 1 - lr_wd)
-                del lr_wd
+            # ---- Process 2D params with MARS ----
+            if indices_2d:
+                p_2d     = [device_params[i]      for i in indices_2d]
+                g_2d     = [device_grads[i]       for i in indices_2d]
+                lg_2d    = [device_last_grads[i]  for i in indices_2d]
+                ea_2d    = [device_exp_avgs[i]    for i in indices_2d]
+                ea_sq_2d = [device_exp_avg_sqs[i] for i in indices_2d]
+                steps_2d = [device_state_steps[i] for i in indices_2d]
 
-            # Decay the first and second moment running average coefficient
-            c_t = torch._foreach_sub(device_grads, device_last_grads)
-            torch._foreach_mul_(c_t, gamma * (device_beta1 / (1. - device_beta1)))
-            torch._foreach_add_(c_t, device_grads)
-            # if c_t_norm > 1. for some c_t, then clip c_t to c_t / c_t_norm
-            c_t_norm = torch._foreach_norm(c_t)
-            c_t = [c_t[i] / c_t_norm[i] if c_t_norm[i] > 1.0 else c_t[i] for i in range(len(c_t))]
-            
-            c_t = [c_t[i] if is_param_2d[i] else device_grads[i] for i in range(len(c_t))]
-            
-            beta_1_2d = torch._foreach_mul(is_param_2d_float, device_beta1)
-            beta_1_1d = torch._foreach_mul(is_param_not_2d_float, betas_1d[0])
-            beta_1 = torch._foreach_add(beta_1_2d, beta_1_1d)
-            # Decay the first and second moment running average coefficient
-            torch._foreach_mul_(device_exp_avgs, beta_1)
-            torch._foreach_add_(device_exp_avgs, torch._foreach_mul(c_t, 1 - beta_1))
-            del beta_1_2d
-            del beta_1_1d  
-                        
-            if mars_type == "mars-adamw":
-                beta_2_2d = torch._foreach_mul(is_param_2d_float, beta2)
-                beta_2_1d = torch._foreach_mul(is_param_not_2d_float, betas_1d[1])
-                beta_2 = torch._foreach_add(beta_2_2d, beta_2_1d)
-                torch._foreach_mul_(device_exp_avg_sqs, beta_2)
-                torch._foreach_add_(device_exp_avg_sqs, torch._foreach_mul(c_t, 1 - beta_2))
+                if weight_decay != 0:
+                    torch._foreach_mul_(p_2d, 1 - lr * weight_decay)
 
-                # Delete the local intermediate(s) since they won't be used anymore to save on peak memory
-                del device_grads
-                del beta_2_2d
-                del beta_2_1d
+                c_t = torch._foreach_sub(g_2d, lg_2d)
+                torch._foreach_mul_(c_t, gamma * (device_beta1 / (1. - device_beta1)))
+                torch._foreach_add_(c_t, g_2d)
+                c_t_norm = torch._foreach_norm(c_t)
+                torch._foreach_div_(c_t, [torch.clamp(n, min=1.0) for n in c_t_norm])
 
-                bias_correction1 = [
-                    1 - beta_1[i] ** _get_value(device_state_steps[i]) for i in range(len(device_state_steps))
-                ]
-                bias_correction2 = [
-                    1 - beta_2[i] ** _get_value(device_state_steps[i]) for i in range(len(device_state_steps))
-                ]
-                del beta_2
-                step_size = _stack_if_compiling([(element_lr[i] / bias_correction1[i]) * -1 for i in range(len(bias_correction1))])
+                torch._foreach_lerp_(ea_2d, c_t, 1 - device_beta1)
 
-                bias_correction2_sqrt = [
-                    bc**0.5 for bc in bias_correction2  # type: ignore[arg-type]
-                ]
+                if mars_type == "mars-adamw":
+                    torch._foreach_mul_(ea_sq_2d, beta2)
+                    torch._foreach_addcmul_(ea_sq_2d, c_t, c_t, value=1 - beta2)
+                    del c_t
+
+                    bc1 = [1 - beta1 ** _get_value(s) for s in steps_2d]
+                    bc2 = [1 - beta2 ** _get_value(s) for s in steps_2d]
+                    step_size_2d = _stack_if_compiling([(lr / b) * -1 for b in bc1])
+                    bc2_sqrt = [b ** 0.5 for b in bc2]
+
+                    if amsgrad:
+                        max_ea_sq_2d = cast(List[Tensor], [device_max_exp_avg_sqs_[i] for i in indices_2d])
+                        torch._foreach_maximum_(max_ea_sq_2d, ea_sq_2d)
+                        sq_sqrt = torch._foreach_sqrt(max_ea_sq_2d)
+                    else:
+                        sq_sqrt = torch._foreach_sqrt(ea_sq_2d)
+
+                    torch._foreach_div_(sq_sqrt, bc2_sqrt)
+                    torch._foreach_add_(sq_sqrt, eps)
+                    torch._foreach_addcdiv_(p_2d, ea_2d, sq_sqrt, step_size_2d)
+                    del sq_sqrt
+                elif mars_type == "mars-lion":
+                    del c_t
+                    signs = torch._foreach_sign(ea_2d)
+                    torch._foreach_add_(p_2d, torch._foreach_mul(signs, -lr))
+                    del signs
+                elif mars_type == "mars-sgd":
+                    del c_t
+                    torch._foreach_add_(p_2d, torch._foreach_mul(ea_2d, -lr))
+                elif mars_type == "mars-shampoo":
+                    # NewtonSchulz orthogonalized update; no second moment needed for 2D.
+                    del c_t
+                    ns_scale = 1. / (1. - device_beta1)
+                    for j in range(len(p_2d)):
+                        factor = max(1, p_2d[j].size(0) / p_2d[j].size(1)) ** 0.5
+                        ns_update = NewtonSchulz(ea_2d[j].mul(ns_scale), eps=eps)
+                        p_2d[j].add_(ns_update.mul(factor).mul(-lr))
+
+            # ---- Process 1D params with AdamW ----
+            if indices_1d:
+                beta1_1d_val, beta2_1d_val = betas_1d
+                lr_1d = lr * lr_1d_factor
+
+                p_1d     = [device_params[i]      for i in indices_1d]
+                g_1d     = [device_grads[i]       for i in indices_1d]
+                ea_1d    = [device_exp_avgs[i]    for i in indices_1d]
+                ea_sq_1d = [device_exp_avg_sqs[i] for i in indices_1d]
+                steps_1d = [device_state_steps[i] for i in indices_1d]
+
+                if weight_decay_1d != 0:
+                    torch._foreach_mul_(p_1d, 1 - lr_1d * weight_decay_1d)
+
+                torch._foreach_lerp_(ea_1d, g_1d, 1 - beta1_1d_val)
+                torch._foreach_mul_(ea_sq_1d, beta2_1d_val)
+                torch._foreach_addcmul_(ea_sq_1d, g_1d, g_1d, value=1 - beta2_1d_val)
+
+                bc1_1d = [1 - beta1_1d_val ** _get_value(s) for s in steps_1d]
+                bc2_1d = [1 - beta2_1d_val ** _get_value(s) for s in steps_1d]
+                step_size_1d = _stack_if_compiling([(lr_1d / b) * -1 for b in bc1_1d])
+                bc2_sqrt_1d = [b ** 0.5 for b in bc2_1d]
 
                 if amsgrad:
-                    device_max_exp_avg_sqs = cast(List[Tensor], device_max_exp_avg_sqs_)
-
-                    # Maintains the maximum of all 2nd moment running avg. till now
-                    torch._foreach_maximum_(device_max_exp_avg_sqs, device_exp_avg_sqs)
-
-                    # Use the max. for normalizing running avg. of gradient
-                    exp_avg_sq_sqrt = torch._foreach_sqrt(device_max_exp_avg_sqs)
+                    max_ea_sq_1d = cast(List[Tensor], [device_max_exp_avg_sqs_[i] for i in indices_1d])
+                    torch._foreach_maximum_(max_ea_sq_1d, ea_sq_1d)
+                    sq_sqrt = torch._foreach_sqrt(max_ea_sq_1d)
                 else:
-                    exp_avg_sq_sqrt = torch._foreach_sqrt(device_exp_avg_sqs)
+                    sq_sqrt = torch._foreach_sqrt(ea_sq_1d)
 
-                torch._foreach_div_(exp_avg_sq_sqrt, bias_correction2_sqrt)
-                torch._foreach_add_(exp_avg_sq_sqrt, eps)
-                torch._foreach_addcdiv_(
-                    device_params,
-                    device_exp_avgs,
-                    exp_avg_sq_sqrt,
-                    step_size,  # type: ignore[arg-type]
-                )
-            elif mars_type == "mars-lion":
-                signs = torch._foreach_sign(device_exp_avgs)
-                
-                torch._foreach_add_(device_params, torch._foreach_mul(signs, -element_lr))
-                del signs
-            elif mars_type == "mars-sgd":
-                element_lr = torch._foreach_add(torch._foreach_mul(is_param_not_2d_float, lr * lr_1d_factor), lr)
-                torch._foreach_add_(device_params, torch._foreach_mul(device_exp_avgs, -element_lr)) 
-              
-            del beta_1              
-            del element_lr
+                torch._foreach_div_(sq_sqrt, bc2_sqrt_1d)
+                torch._foreach_add_(sq_sqrt, eps)
+                torch._foreach_addcdiv_(p_1d, ea_1d, sq_sqrt, step_size_1d)
+                del sq_sqrt
 
 def _fused_mars_single_tensor(
     params: List[Tensor],
@@ -539,6 +589,13 @@ def _fused_mars_single_tensor(
     weight_decay_1d: float,
     mars_type: str,
 ):
+    import fused_mars
+    # Increment all steps at once and get step_t once — avoids N GPU-CPU syncs
+    # (for fused mode, state["step"] lives on GPU, so .item() would sync N times otherwise)
+    torch._foreach_add_(state_steps, 1)
+    step_t = _get_value(state_steps[0])  # one sync, all steps are equal
+    var_reduction_factor = gamma * (beta1 / (1. - beta1))
+
     for i, param in enumerate(params):
         p_data_fp32 = param.data.float()
         grad = grads[i]
@@ -550,38 +607,30 @@ def _fused_mars_single_tensor(
         else:
             max_exp_avg_sq = exp_avg_sqs[i]
         last_grad = last_grads[i]
-        step_t = state_steps[i] + 1
         if use_mars:
             beta1_, beta2_ = beta1, beta2
-            c_t_ = (grad - last_grad).mul(gamma * (beta1 / (1. - beta1))).add(grad)
+            c_t_ = (grad - last_grad).mul(var_reduction_factor).add(grad)
             c_t_norm = torch.norm(c_t_)
-            c_t_factor = 1. / c_t_norm if c_t_norm > 1. else 1.
-            grad = c_t_ * c_t_factor
+            # torch.clamp stays on GPU — no GPU-CPU sync for norm conditional
+            grad = c_t_ * torch.clamp(c_t_norm.reciprocal(), max=1.0)
             LR = lr
             WD = weight_decay
         else:
             beta1_, beta2_ = betas_1d
             LR = lr * lr_1d_factor
             WD = weight_decay_1d
-        bias_correction1 = 1 - beta1_**step_t
-        bias_correction2 = 1 - beta2_**step_t
-
-        # optimize_1d or is_grad_2d -> use_mars (deprecated)
-        # c_t_ -> grad
-        # LR, WD combined, gamma deprecated
+        bias_correction1 = float(1 - beta1_**step_t)
+        bias_correction2 = float(1 - beta2_**step_t)
         with torch.cuda.device(param.device):
-            import fused_mars
             fused_mars.mars_single_tensor(
                 p_data_fp32,
                 grad,
                 exp_avg,
-                exp_avg_sq, beta1_, beta2_, 
-                bias_correction1, bias_correction2, 
+                exp_avg_sq, beta1_, beta2_,
+                bias_correction1, bias_correction2,
                 LR, WD, eps, amsgrad, max_exp_avg_sq
             )
-        state_steps[i] = step_t
         
-import fused_mars
 def _fused_mars_multi_tensor(
     params: List[Tensor],
     grads: List[Tensor],
@@ -609,58 +658,59 @@ def _fused_mars_multi_tensor(
     betas_1d: Tuple[float, float],
     weight_decay_1d: float,
     mars_type: str,
+    is_grad_2d_list: Optional[List[Tensor]] = None,
 ):
-    # here is_grad_2d == optimize_1d || is_grad_2d
-    # is_grad_2d = [torch.tensor((len(grad.shape) == 2) or optimize_1d, dtype=params[0].dtype, device=params[0].device) for grad in grads]
-    is_grad_2d = []
-    # c_t_list = []
-    var_reduction_factor = gamma * (beta1 / (1. - beta1))
-    for i, param in enumerate(params):
-        step_t = state_steps[i] + 1
-        state_steps[i] = step_t
-        grad_ = grads[i]
+    # is_grad_2d masks are cached in optimizer state (allocated once, not every step).
+    # Fall back to allocating them here only if not provided (e.g. functional API usage).
+    if is_grad_2d_list is not None and len(is_grad_2d_list) == len(params):
+        is_grad_2d = is_grad_2d_list
+    else:
+        is_grad_2d = [
+            torch.ones_like(p, memory_format=torch.preserve_format)
+            if len(p.shape) == 2 or optimize_1d
+            else torch.zeros_like(p, memory_format=torch.preserve_format)
+            for p in params
+        ]
 
-        if len(param.shape) == 2 or optimize_1d:
-            # is_grad_2d.append(param * 0 + 1)
-            is_grad_2d.append(torch.ones_like(param, dtype=param.dtype, device=param.device))
-            # c_t_ = (grad_ - last_grads[i]).mul(var_reduction_factor).add(grad_)
-            # c_t_norm = torch.norm(c_t_)
-            # c_t_factor = 1. / c_t_norm if c_t_norm > 1. else 1.
-            # # c_t_ = c_t_ * c_t_factor
-            # grads[i] = c_t_ * c_t_factor
-            grad_.add_(grad_ - last_grads[i], alpha=var_reduction_factor)
-            grad_factor = torch.min(1. / torch.norm(grad_), torch.tensor(1.0, device=grad_.device))
-            grad_.mul_(grad_factor)
-        else:
-            # is_grad_2d.append(param * 0 + 1)
-            is_grad_2d.append(torch.zeros_like(param, dtype=param.dtype, device=param.device))
-            # c_t_ = grad_
-        # c_t_list.append(c_t_)
-    
+    # Increment all steps at once (GPU ops, no per-param sync)
+    torch._foreach_add_(state_steps, 1)
+
+    # Compute c_t for MARS params using batched _foreach ops.
+    # This replaces a per-param Python loop (3N kernel launches) with 4 batched calls.
+    # mars_grads elements ARE the same tensors as grads[i], so in-place ops update grads directly.
+    var_reduction_factor = gamma * (beta1 / (1. - beta1))
+    mars_indices = [i for i in range(len(params)) if len(params[i].shape) == 2 or optimize_1d]
+    if mars_indices:
+        mars_grads = [grads[i] for i in mars_indices]
+        mars_last  = [last_grads[i] for i in mars_indices]
+        delta = torch._foreach_sub(mars_grads, mars_last)
+        torch._foreach_mul_(delta, var_reduction_factor)
+        torch._foreach_add_(mars_grads, delta)   # in-place: modifies grads[i] directly
+        del delta
+        c_t_norms = torch._foreach_norm(mars_grads)
+        torch._foreach_div_(mars_grads, [torch.clamp(n, min=1.0) for n in c_t_norms])
+
+    step_t = _get_value(state_steps[0])  # one GPU-CPU sync, all steps are equal
     if amsgrad:
         max_exp_avg_sq = max_exp_avg_sqs
     else:
         max_exp_avg_sq = exp_avg_sqs
-    bias_correction1 = 1 - beta1**step_t
-    bias_correction2 = math.sqrt(1 - beta2**step_t) # here use sqrt for bias_correction2
+    bias_correction1 = float(1 - beta1**step_t)
+    bias_correction2 = math.sqrt(1 - beta2**step_t)  # here use sqrt for bias_correction2
     beta_1_1d, beta_2_1d = betas_1d
-    bc_1_1d = 1 - beta_1_1d**step_t
+    bc_1_1d = float(1 - beta_1_1d**step_t)
     bc_2_1d = math.sqrt(1 - beta_2_1d**step_t)
+    import fused_mars
     multi_tensor_applier = MultiTensorApply(2048 * 32)
     _dummy_overflow_buf = torch.cuda.IntTensor([0])
     multi_tensor_applier(
         fused_mars.mars_multi_tensor, _dummy_overflow_buf,
-        # [params, grads, exp_avgs, exp_avg_sqs, max_exp_avg_sq, c_t_list, is_grad_2d],
         [params, grads, exp_avgs, exp_avg_sqs, max_exp_avg_sq, is_grad_2d],
-        beta1, beta2, 
-        bias_correction1, bias_correction2, 
+        beta1, beta2,
+        bias_correction1, bias_correction2,
         lr, weight_decay, eps, amsgrad, gamma,
-        optimize_1d, lr_1d_factor, beta_1_1d, beta_2_1d, 
+        optimize_1d, lr_1d_factor, beta_1_1d, beta_2_1d,
         bc_1_1d, bc_2_1d, weight_decay_1d)
-    for item in is_grad_2d:
-        del item
-    del is_grad_2d
-    torch.cuda.empty_cache()
 
 class MARS(Optimizer):
     def __init__(self, params, lr=3e-3, betas=(0.95, 0.99), eps=1e-8, weight_decay=0., amsgrad=False, gamma=0.025, 
@@ -746,6 +796,7 @@ class MARS(Optimizer):
         exp_avg_sqs,
         max_exp_avg_sqs,
         state_steps,
+        is_grad_2d_list=None,
     ):
         has_complex = False
         for p in group["params"]:
@@ -763,6 +814,14 @@ class MARS(Optimizer):
             if len(state) == 0:
                 if group["fused"]:
                     _device_dtype_check_for_fused(p)
+                    # Cache the is_grad_2d mask (full-shaped, all-ones or all-zeros).
+                    # Compute once and reuse every step to avoid per-step allocation.
+                    use_mars = len(p.shape) == 2 or self.optimize_1d
+                    state["is_grad_2d"] = (
+                        torch.ones_like(p, memory_format=torch.preserve_format)
+                        if use_mars
+                        else torch.zeros_like(p, memory_format=torch.preserve_format)
+                    )
                 # note(crcrpar): Deliberately host `step` on CPU if both capturable and fused are off.
                 # This is because kernel launches are costly on CUDA and XLA.
                 state["step"] = (
@@ -792,6 +851,8 @@ class MARS(Optimizer):
             exp_avgs.append(state["exp_avg"])
             exp_avg_sqs.append(state["exp_avg_sq"])
             last_grads.append(state["last_grad"])
+            if is_grad_2d_list is not None and group["fused"] and "is_grad_2d" in state:
+                is_grad_2d_list.append(state["is_grad_2d"])
 
             if group["amsgrad"]:
                 max_exp_avg_sqs.append(state["max_exp_avg_sq"])
@@ -841,6 +902,7 @@ class MARS(Optimizer):
             exp_avg_sqs: List[Tensor] = []
             max_exp_avg_sqs: List[Tensor] = []
             state_steps: List[Tensor] = []
+            is_grad_2d_list: List[Tensor] = []
             amsgrad: bool = group["amsgrad"]
             beta1, beta2 = cast(Tuple[float, float], group["betas"])
 
@@ -854,6 +916,7 @@ class MARS(Optimizer):
                 exp_avg_sqs,
                 max_exp_avg_sqs,
                 state_steps,
+                is_grad_2d_list,
             )
             mars(
                 params_with_grad,
@@ -883,6 +946,7 @@ class MARS(Optimizer):
                 lr_1d_factor=self.lr_1d_factor,
                 betas_1d=self.betas_1d,
                 weight_decay_1d=group["weight_decay_1d"],
+                is_grad_2d_list=is_grad_2d_list,
             )
             if self.is_approx:
                 for i in range(len(params_with_grad)):
@@ -913,6 +977,7 @@ def mars(
     grad_scale: Optional[Tensor] = None,
     found_inf: Optional[Tensor] = None,
     has_complex: bool = False,
+    is_grad_2d_list: Optional[List[Tensor]] = None,
     *,
     gamma: float,
     amsgrad: bool,
@@ -961,26 +1026,7 @@ def mars(
     if fused and torch_jit_is_scripting:
         raise RuntimeError("torch.jit.script not supported with fused optimizers")
 
-    if fused and not torch_jit_is_scripting and mars_type == "mars-adamw":
-        if foreach:
-            func = _fused_mars_multi_tensor
-        else:
-            func = _fused_mars_single_tensor
-    elif not optimize_1d or mars_type == "mars-shampoo":
-        func = _single_tensor_mars
-    elif foreach and not torch_jit_is_scripting:
-        func = _multi_tensor_mars
-    else:
-        func = _single_tensor_mars
-
-    func(
-        params,
-        grads,
-        last_grads,
-        exp_avgs,
-        exp_avg_sqs,
-        max_exp_avg_sqs,
-        state_steps,
+    common_kwargs = dict(
         amsgrad=amsgrad,
         beta1=beta1,
         beta2=beta2,
@@ -998,8 +1044,35 @@ def mars(
         lr_1d_factor=lr_1d_factor,
         betas_1d=betas_1d,
         weight_decay_1d=weight_decay_1d,
-        mars_type=mars_type
+        mars_type=mars_type,
     )
+
+    if fused and not torch_jit_is_scripting and mars_type == "mars-adamw":
+        if foreach:
+            _fused_mars_multi_tensor(
+                params, grads, last_grads, exp_avgs, exp_avg_sqs,
+                max_exp_avg_sqs, state_steps,
+                is_grad_2d_list=is_grad_2d_list,
+                **common_kwargs,
+            )
+        else:
+            _fused_mars_single_tensor(
+                params, grads, last_grads, exp_avgs, exp_avg_sqs,
+                max_exp_avg_sqs, state_steps,
+                **common_kwargs,
+            )
+    elif foreach and not torch_jit_is_scripting:
+        _multi_tensor_mars(
+            params, grads, last_grads, exp_avgs, exp_avg_sqs,
+            max_exp_avg_sqs, state_steps,
+            **common_kwargs,
+        )
+    else:
+        _single_tensor_mars(
+            params, grads, last_grads, exp_avgs, exp_avg_sqs,
+            max_exp_avg_sqs, state_steps,
+            **common_kwargs,
+        )
         
 def _check_fused_available():
     try:
