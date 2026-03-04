@@ -5,6 +5,7 @@ This repository contains the official code for the paper [MARS-M: When Variance 
 Authors: [Yifeng Liu](https://scholar.google.com/citations?user=mFvOVkMAAAAJ&hl=zh-CN)\*, [Angela Yuan](https://scholar.google.com/citations?user=8foZzX4AAAAJ)\*, [Quanquan Gu](https://web.cs.ucla.edu/~qgu/)
 
 ## 🔔 NEWS
+- **[03/04/2026]** Memory-efficient MARS-M is available in optimizers/mars_m_efficient.py, which is approximated MARS-M without clipping.
 - **[10/20/2025]** Our paper is released on arXiv: https://arxiv.org/abs/2510.21800.
 - **[10/05/2025]** Our code is released.
 
