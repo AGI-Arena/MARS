@@ -378,8 +378,12 @@ while True:
         momentum_div = 0
         LL = len(optimizer.state_dict()['state'])
         for jj in range(LL):
-            momentum_norm += (optimizer.state_dict()['state'][jj]['exp_avg'].detach().norm(2)) ** 2
-            momentum_norm_sq += (optimizer.state_dict()['state'][jj]['exp_avg_sq'].detach().norm(2)) ** 2
+            if 'exp_avg' in optimizer.state_dict()['state'][jj]:
+                momentum_norm += (optimizer.state_dict()['state'][jj]['exp_avg'].detach().norm(2)) ** 2
+            if 'momentum_buffer' in optimizer.state_dict()['state'][jj]:
+                momentum_norm += (optimizer.state_dict()['state'][jj]['momentum_buffer'].detach().norm(2)) ** 2
+            if 'moment2' in optimizer.state_dict()['state'][jj]:
+                momentum_norm_sq += (optimizer.state_dict()['state'][jj]['moment2'].detach().norm(2)) ** 2
         momentum_norm = torch.sqrt(momentum_norm).item()
         momentum_norm_sq = torch.sqrt(momentum_norm_sq).item()
         momentum_div = momentum_norm/(np.sqrt(momentum_norm_sq)+1e-8)
